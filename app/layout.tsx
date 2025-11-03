@@ -1,8 +1,8 @@
 import '@/app/globals.css';
+import { Toaster } from '@/components/ui/sonner';
 import { i18n } from '@/lib/config/i18n';
 import { ThemeProvider } from '@/lib/providers/theme-provider';
 import { Metadata } from 'next';
-import { Toaster } from '@/components/ui/sonner';
 
 export const metadata: Metadata = {
   title: 'BRUSS Floor',
@@ -16,14 +16,10 @@ export default async function RootLayout(props: { children: React.ReactNode }) {
     <html lang={i18n.defaultLocale} suppressHydrationWarning>
       <head />
 
-      <body className='bg-background min-h-screen font-sans antialiased'>
-        <ThemeProvider
-          attribute='class'
-          defaultTheme='system'
-          enableSystem
-        >
+      <body className="bg-background min-h-screen font-sans antialiased">
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           {children}
-          <Toaster position='bottom-center' richColors />
+          <Toaster position="bottom-center" richColors />
         </ThemeProvider>
       </body>
     </html>

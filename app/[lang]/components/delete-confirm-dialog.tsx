@@ -11,7 +11,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { cn } from '@/lib/utils/cn';
 import { Trash2, X } from 'lucide-react';
 import { ReactNode } from 'react';
 
@@ -24,6 +25,7 @@ export interface DeleteConfirmDialogProps {
     cancel: string;
     delete: string;
   };
+  destructive?: boolean;
 }
 
 export default function DeleteConfirmDialog({
@@ -32,10 +34,11 @@ export default function DeleteConfirmDialog({
   description,
   onConfirm,
   labels,
+  destructive = false,
 }: DeleteConfirmDialogProps) {
   const defaultTrigger = (
-    <Button size='icon' variant='ghost'>
-      <Trash2 />
+    <Button size='icon' variant='ghost' className='h-9 w-9'>
+      <Trash2 className='h-4 w-4' />
     </Button>
   );
 
@@ -56,7 +59,10 @@ export default function DeleteConfirmDialog({
           </AlertDialogCancel>
           <AlertDialogAction
             onClick={onConfirm}
-            className='flex w-3/4 items-center justify-center gap-2'
+            className={cn(
+              'flex w-3/4 items-center justify-center gap-2',
+              destructive && buttonVariants({ variant: 'destructive' })
+            )}
           >
             <Trash2 className='h-4 w-4' />
             {labels.delete}

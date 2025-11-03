@@ -10,7 +10,7 @@ import type { LoginType } from './lib/zod';
 
 async function getNextReworkAttempt(
   dmc: string,
-  workplace: string,
+  workplace: string
 ): Promise<string> {
   const scansCollection = await dbc('scans');
 
@@ -176,7 +176,7 @@ function bmwDateValidation(dmc: string) {
   for (let i = 0; i <= 30; i++) {
     const checkDate = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
     const checkDateFormatted = parseInt(
-      checkDate.toISOString().slice(2, 10).split('-').join(''),
+      checkDate.toISOString().slice(2, 10).split('-').join('')
     );
     if (dmcDate === checkDateFormatted) {
       return true;
@@ -184,7 +184,7 @@ function bmwDateValidation(dmc: string) {
   }
   const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
   const tomorrowDate = parseInt(
-    tomorrow.toISOString().slice(2, 10).split('-').join(''),
+    tomorrow.toISOString().slice(2, 10).split('-').join('')
   );
   if (dmcDate === tomorrowDate) {
     return true;
@@ -200,7 +200,7 @@ function createDmcValidationSchema(articleConfig: ArticleConfigType) {
       .refine((dmc) =>
         dmc
           .toLowerCase()
-          .includes(articleConfig.dmcFirstValidation.toLowerCase()),
+          .includes(articleConfig.dmcFirstValidation.toLowerCase())
       )
       .refine(
         (dmc) =>
@@ -208,7 +208,7 @@ function createDmcValidationSchema(articleConfig: ArticleConfigType) {
           (articleConfig.dmcSecondValidation &&
             dmc
               .toLowerCase()
-              .includes(articleConfig.dmcSecondValidation.toLowerCase())),
+              .includes(articleConfig.dmcSecondValidation.toLowerCase()))
       ),
   });
 }
@@ -216,7 +216,7 @@ function createDmcValidationSchema(articleConfig: ArticleConfigType) {
 export async function saveDmc(
   dmc: string,
   articleConfigId: string,
-  operators: string[],
+  operators: string[]
 ): Promise<{ message: string; dmc?: string; time?: string }> {
   try {
     const articlesConfigCollection = await dbc('articles_config');
@@ -260,7 +260,7 @@ export async function saveDmc(
         dmc: validatedDmc,
         workplace: articleConfig.workplace,
       },
-      { sort: { time: -1 } },
+      { sort: { time: -1 } }
     );
 
     if (existingDmc && !isReworkStatus(existingDmc.status)) {
@@ -273,7 +273,7 @@ export async function saveDmc(
         const pgc = await pgp.connect();
         await pgc.query('SET statement_timeout TO 3000');
         const res = await pgc.query(
-          `SELECT haube_io FROM stationdichtheitspruefung WHERE id_haube = '${validatedDmc}'`,
+          `SELECT haube_io FROM stationdichtheitspruefung WHERE id_haube = '${validatedDmc}'`
         );
         pgc.release();
         if (res.rows.length === 0 || !res.rows[0].haube_io) {
@@ -329,7 +329,7 @@ export async function saveDmc(
       ) {
         const variant = articleConfig.workplace === 'eol810' ? '10' : '20';
         await fetch(
-          `http://10.27.90.4:8090/api/turn-on-ok-indicator/${variant}`,
+          `http://10.27.90.4:8090/api/turn-on-ok-indicator/${variant}`
         );
       }
       if (smartStatus === 'unknown') {
@@ -372,7 +372,7 @@ function extractQrValues(hydra: string) {
 export async function saveHydra(
   hydra: string,
   articleConfigId: string,
-  operators: string[],
+  operators: string[]
 ): Promise<{ message: string }> {
   try {
     const articlesConfigCollection = await dbc('articles_config');
@@ -390,7 +390,7 @@ export async function saveHydra(
         .min(10, 'QR code too short')
         .refine(
           (val) => val.includes('|'),
-          'Invalid QR format - missing delimiters',
+          'Invalid QR format - missing delimiters'
         )
         .refine((val) => {
           // Check for required fields: A:, Q:, B:
@@ -407,7 +407,7 @@ export async function saveHydra(
     const validatedHydra = parse.data.hydra;
 
     const { qrArticle, qrQuantity, qrBatch } = extractQrValues(
-      validatedHydra.toUpperCase(),
+      validatedHydra.toUpperCase()
     );
 
     // Check if extraction failed (invalid QR format)
@@ -466,7 +466,7 @@ export async function saveHydra(
           hydra_operator: operators, // Separate field for hydra operator, don't overwrite original operator
           hydra_time: new Date(),
         },
-      },
+      }
     );
 
     if (updateResult.modifiedCount > 0) {
@@ -482,7 +482,7 @@ export async function saveHydra(
 export async function savePallet(
   pallet: string,
   articleConfigId: string,
-  operators: string[],
+  operators: string[]
 ): Promise<{ message: string }> {
   try {
     const articlesConfigCollection = await dbc('articles_config');
@@ -577,7 +577,7 @@ export async function savePallet(
           pallet_time: new Date(),
           pallet_operator: operators, // Always save as array
         },
-      },
+      }
     );
 
     if (updateResult.modifiedCount > 0) {
@@ -593,7 +593,7 @@ export async function savePallet(
 export async function saveDmcRework(
   dmc: string,
   articleConfigId: string,
-  operators: string[],
+  operators: string[]
 ): Promise<{ message: string; dmc?: string; time?: string }> {
   try {
     const articlesConfigCollection = await dbc('articles_config');
@@ -625,7 +625,7 @@ export async function saveDmcRework(
         dmc: validatedDmc,
         workplace: articleConfig.workplace,
       },
-      { sort: { time: -1 } },
+      { sort: { time: -1 } }
     );
 
     if (!existingDmc) {
@@ -634,7 +634,7 @@ export async function saveDmcRework(
 
     const nextReworkStatus = await getNextReworkAttempt(
       validatedDmc,
-      articleConfig.workplace,
+      articleConfig.workplace
     );
 
     await scansCollection.updateOne(
@@ -646,7 +646,7 @@ export async function saveDmcRework(
           rework_reason: `workplace rework: ${articleConfig.workplace.toUpperCase()}`,
           rework_user: `personal number: ${operators.join(', ')}`,
         },
-      },
+      }
     );
 
     // EOL810/EOL488 check in external SMART API
@@ -690,7 +690,7 @@ export async function saveDmcRework(
       ) {
         const variant = articleConfig.workplace === 'eol810' ? '10' : '20';
         await fetch(
-          `http://10.27.90.4:8090/api/turn-on-ok-indicator/${variant}`,
+          `http://10.27.90.4:8090/api/turn-on-ok-indicator/${variant}`
         );
       }
       return {
@@ -710,7 +710,7 @@ export async function save(
   articleConfigId: string,
   operators: string[],
   scanType: 'dmc' | 'hydra' | 'pallet',
-  scanValue: string,
+  scanValue: string
 ): Promise<{ message: string; dmc?: string; time?: string } | undefined> {
   if (!articleConfigId || !operators || !scanType || !scanValue) {
     return { message: 'missing data' };
@@ -895,7 +895,7 @@ export async function deleteDmcFromBox(dmc: string, operators: string[]) {
 
     const nextReworkStatus = await getNextReworkAttempt(
       dmc,
-      existingDmc.workplace,
+      existingDmc.workplace
     );
 
     const result = await scansCollection.updateOne(
@@ -907,7 +907,7 @@ export async function deleteDmcFromBox(dmc: string, operators: string[]) {
           rework_reason: 'deleted from box by operator',
           rework_user: `personal number: ${operators.join(', ')}`,
         },
-      },
+      }
     );
 
     if (result.modifiedCount === 1) {
@@ -922,10 +922,82 @@ export async function deleteDmcFromBox(dmc: string, operators: string[]) {
   }
 }
 
+// Delete all parts from box (set all to rework)
+export async function deleteAllPartsFromBox(
+  articleConfigId: string,
+  operators: string[]
+) {
+  try {
+    if (!articleConfigId || !operators || operators.length === 0) {
+      console.error('Invalid parameters for deleteAllPartsFromBox:', {
+        articleConfigId,
+        operators,
+      });
+      return { message: 'invalid parameters', count: 0 };
+    }
+
+    const articleConfig = await getArticleConfigById(articleConfigId);
+    if (!articleConfig) {
+      return { message: 'article not found', count: 0 };
+    }
+
+    const scansCollection = await dbc('scans');
+
+    // Get all DMCs in box status for this article/workplace
+    const boxDmcs = await scansCollection
+      .find({
+        article: articleConfig.articleNumber,
+        workplace: articleConfig.workplace,
+        status: 'box',
+      })
+      .toArray();
+
+    if (boxDmcs.length === 0) {
+      return { message: 'no parts found', count: 0 };
+    }
+
+    let totalUpdated = 0;
+    for (const dmcRecord of boxDmcs) {
+      const nextReworkStatus = await getNextReworkAttempt(
+        dmcRecord.dmc,
+        dmcRecord.workplace
+      );
+
+      const result = await scansCollection.updateOne(
+        { _id: dmcRecord._id },
+        {
+          $set: {
+            status: nextReworkStatus,
+            rework_time: new Date(),
+            rework_reason: 'deleted all parts from box by operator',
+            rework_user: `personal number: ${operators.join(', ')}`,
+          },
+        }
+      );
+
+      if (result.modifiedCount === 1) {
+        totalUpdated++;
+      }
+    }
+
+    if (totalUpdated > 0) {
+      return { message: 'deleted', count: totalUpdated };
+    }
+
+    console.error(
+      'Failed to delete any parts from box - no documents modified'
+    );
+    return { message: 'update failed', count: 0 };
+  } catch (error) {
+    console.error('Error in deleteAllPartsFromBox:', error);
+    return { message: 'error', count: 0 };
+  }
+}
+
 // Delete HYDRA batch from pallet (set status to rework)
 export async function deleteHydraFromPallet(
   hydra: string,
-  operators: string[],
+  operators: string[]
 ) {
   try {
     if (!hydra || !operators || operators.length === 0) {
@@ -956,7 +1028,7 @@ export async function deleteHydraFromPallet(
     for (const dmcRecord of palletDmcs) {
       const nextReworkStatus = await getNextReworkAttempt(
         dmcRecord.dmc,
-        dmcRecord.workplace,
+        dmcRecord.workplace
       );
 
       const result = await scansCollection.updateOne(
@@ -968,7 +1040,7 @@ export async function deleteHydraFromPallet(
             rework_reason: 'deleted from pallet by operator',
             rework_user: `personal number: ${operators.join(', ')}`,
           },
-        },
+        }
       );
 
       if (result.modifiedCount === 1) {
@@ -983,12 +1055,102 @@ export async function deleteHydraFromPallet(
     }
 
     console.error(
-      `Failed to delete HYDRA batch ${hydra} - no documents modified`,
+      `Failed to delete HYDRA batch ${hydra} - no documents modified`
     );
     return { message: 'update failed' };
   } catch (error) {
     console.error('Error in deleteHydraFromPallet:', error);
     return { message: 'error' };
+  }
+}
+
+// Delete all boxes from pallet (set all to rework)
+export async function deleteAllBoxesFromPallet(
+  articleConfigId: string,
+  operators: string[]
+) {
+  try {
+    if (!articleConfigId || !operators || operators.length === 0) {
+      console.error('Invalid parameters for deleteAllBoxesFromPallet:', {
+        articleConfigId,
+        operators,
+      });
+      return { message: 'invalid parameters', count: 0 };
+    }
+
+    const articleConfig = await getArticleConfigById(articleConfigId);
+    if (!articleConfig) {
+      return { message: 'article not found', count: 0 };
+    }
+
+    const scansCollection = await dbc('scans');
+
+    // Get all unique HYDRA batches in pallet status for this article/workplace
+    const palletBatches = await scansCollection
+      .aggregate([
+        {
+          $match: {
+            article: articleConfig.articleNumber,
+            workplace: articleConfig.workplace,
+            status: 'pallet',
+          },
+        },
+        {
+          $group: {
+            _id: '$hydra_batch',
+          },
+        },
+      ])
+      .toArray();
+
+    if (palletBatches.length === 0) {
+      return { message: 'no boxes found', count: 0 };
+    }
+
+    let totalUpdated = 0;
+    for (const batch of palletBatches) {
+      const batchDmcs = await scansCollection
+        .find({
+          hydra_batch: batch._id,
+          status: 'pallet',
+        })
+        .toArray();
+
+      for (const dmcRecord of batchDmcs) {
+        const nextReworkStatus = await getNextReworkAttempt(
+          dmcRecord.dmc,
+          dmcRecord.workplace
+        );
+
+        const result = await scansCollection.updateOne(
+          { _id: dmcRecord._id },
+          {
+            $set: {
+              status: nextReworkStatus,
+              rework_time: new Date(),
+              rework_reason: 'deleted all boxes from pallet by operator',
+              rework_user: `personal number: ${operators.join(', ')}`,
+            },
+          }
+        );
+
+        if (result.modifiedCount === 1) {
+          totalUpdated++;
+        }
+      }
+    }
+
+    if (totalUpdated > 0) {
+      return { message: 'deleted', count: palletBatches.length };
+    }
+
+    console.error(
+      'Failed to delete any boxes from pallet - no documents modified'
+    );
+    return { message: 'update failed', count: 0 };
+  } catch (error) {
+    console.error('Error in deleteAllBoxesFromPallet:', error);
+    return { message: 'error', count: 0 };
   }
 }
 

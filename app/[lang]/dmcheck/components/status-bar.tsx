@@ -1,20 +1,26 @@
 'use client';
 
-import { Forklift, Package } from 'lucide-react';
+import DeleteConfirmDialog from '@/app/[lang]/components/delete-confirm-dialog';
+import ItemListDialog from '@/app/[lang]/components/item-list-dialog';
+import StatusCard from '@/app/[lang]/components/status-card';
+import { Button } from '@/components/ui/button';
+import { formatTime } from '@/lib/utils/date-format';
+import { useQueryClient } from '@tanstack/react-query';
+import { Forklift, Package, Trash2 } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
-import { useQueryClient } from '@tanstack/react-query';
-import { formatTime } from '@/lib/utils/date-format';
-import { deleteDmcFromBox, deleteHydraFromPallet } from '../actions';
+import {
+  deleteAllBoxesFromPallet,
+  deleteAllPartsFromBox,
+  deleteDmcFromBox,
+  deleteHydraFromPallet,
+} from '../actions';
 import { useGetBoxScans } from '../data/get-box-scans';
 import { useGetBoxStatus } from '../data/get-box-status';
 import { useGetPalletBoxes } from '../data/get-pallet-boxes';
 import { useGetPalletStatus } from '../data/get-pallet-status';
 import type { Dictionary } from '../lib/dict';
 import { useOperatorStore, useScanStore } from '../lib/stores';
-import StatusCard from '@/app/[lang]/components/status-card';
-import DeleteConfirmDialog from '@/app/[lang]/components/delete-confirm-dialog';
-import ItemListDialog from '@/app/[lang]/components/item-list-dialog';
 
 interface StatusBarProps {
   dict: Dictionary['statusBar'];
@@ -31,9 +37,11 @@ export default function StatusBar({ dict }: StatusBarProps) {
     .map((op) => op!.identifier);
 
   // Get status from React Query
-  const { data: boxData = { piecesInBox: 0 } } = useGetBoxStatus(selectedArticle?.id);
+  const { data: boxData = { piecesInBox: 0 } } = useGetBoxStatus(
+    selectedArticle?.id
+  );
   const { data: palletData = { boxesOnPallet: 0 } } = useGetPalletStatus(
-    selectedArticle?.id, 
+    selectedArticle?.id,
     selectedArticle?.pallet || false
   );
 
@@ -65,7 +73,7 @@ export default function StatusBar({ dict }: StatusBarProps) {
       await refetchBoxScans();
       setBoxDialogOpen(true);
     },
-    [refetchBoxScans],
+    [refetchBoxScans]
   );
 
   const handlePalletIconClick = useCallback(
@@ -74,7 +82,7 @@ export default function StatusBar({ dict }: StatusBarProps) {
       await refetchPalletBoxes();
       setPalletDialogOpen(true);
     },
-    [refetchPalletBoxes],
+    [refetchPalletBoxes]
   );
 
   // Don't render if no article selected
@@ -90,15 +98,15 @@ export default function StatusBar({ dict }: StatusBarProps) {
         if (res.message === 'deleted') {
           // Remove from local store
           removeScan(dmc);
-          
+
           // Refetch box scans manually since it's disabled by default
           await refetchBoxScans();
-          
+
           // Invalidate box status query for counter update
           await queryClient.invalidateQueries({
             queryKey: ['box-status', selectedArticle?.id],
           });
-          
+
           return dict.dmcDeleted;
         } else if (res.message === 'not found') {
           throw new Error(dict.dmcNotFound);
@@ -114,7 +122,7 @@ export default function StatusBar({ dict }: StatusBarProps) {
         loading: dict.deletingDmc,
         success: (msg) => msg,
         error: (err) => err.message || dict.deleteError,
-      },
+      }
     );
   };
 
@@ -125,12 +133,12 @@ export default function StatusBar({ dict }: StatusBarProps) {
         if (res.message === 'deleted') {
           // Refetch pallet boxes manually since it's disabled by default
           await refetchPalletBoxes();
-          
+
           // Invalidate pallet status query for counter update
           await queryClient.invalidateQueries({
             queryKey: ['pallet-status', selectedArticle?.id],
           });
-          
+
           return dict.boxDeleted;
         } else if (res.message === 'not found') {
           throw new Error(dict.boxNotFound);
@@ -146,7 +154,85 @@ export default function StatusBar({ dict }: StatusBarProps) {
         loading: dict.deletingBox,
         success: (msg) => msg,
         error: (err) => err.message || dict.deleteError,
+      }
+    );
+  };
+
+  const handleDeleteAllParts = async () => {
+    if (!selectedArticle) return;
+
+    toast.promise(
+      async () => {
+        const res = await deleteAllPartsFromBox(selectedArticle.id, operators);
+        if (res.message === 'deleted') {
+          // Clear all scans from local store
+          boxScans.forEach((scan) => removeScan(scan.dmc));
+
+          // Refetch box scans manually since it's disabled by default
+          await refetchBoxScans();
+
+          // Invalidate box status query for counter update
+          await queryClient.invalidateQueries({
+            queryKey: ['box-status', selectedArticle?.id],
+          });
+
+          return `${dict.allPartsDeleted} (${res.count})`;
+        } else if (res.message === 'no parts found') {
+          throw new Error(dict.noScans);
+        } else if (res.message === 'article not found') {
+          throw new Error(dict.articleNotFound);
+        } else if (res.message === 'invalid parameters') {
+          throw new Error('Invalid parameters provided');
+        } else if (res.message === 'update failed') {
+          throw new Error('Failed to update database');
+        } else {
+          throw new Error(dict.deleteError);
+        }
       },
+      {
+        loading: dict.deletingAllParts,
+        success: (msg) => msg,
+        error: (err) => err.message || dict.deleteError,
+      }
+    );
+  };
+
+  const handleDeleteAllBoxes = async () => {
+    if (!selectedArticle) return;
+
+    toast.promise(
+      async () => {
+        const res = await deleteAllBoxesFromPallet(
+          selectedArticle.id,
+          operators
+        );
+        if (res.message === 'deleted') {
+          // Refetch pallet boxes manually since it's disabled by default
+          await refetchPalletBoxes();
+
+          // Invalidate pallet status query for counter update
+          await queryClient.invalidateQueries({
+            queryKey: ['pallet-status', selectedArticle?.id],
+          });
+
+          return `${dict.allBoxesDeleted} (${res.count})`;
+        } else if (res.message === 'no boxes found') {
+          throw new Error(dict.noScans);
+        } else if (res.message === 'article not found') {
+          throw new Error(dict.articleNotFound);
+        } else if (res.message === 'invalid parameters') {
+          throw new Error('Invalid parameters provided');
+        } else if (res.message === 'update failed') {
+          throw new Error('Failed to update database');
+        } else {
+          throw new Error(dict.deleteError);
+        }
+      },
+      {
+        loading: dict.deletingAllBoxes,
+        success: (msg) => msg,
+        error: (err) => err.message || dict.deleteError,
+      }
     );
   };
 
@@ -167,7 +253,9 @@ export default function StatusBar({ dict }: StatusBarProps) {
 
   return (
     <>
-      <div className={`grid gap-2 ${selectedArticle.pallet ? 'grid-cols-2' : 'grid-cols-1'}`}>
+      <div
+        className={`grid gap-2 ${selectedArticle.pallet ? 'grid-cols-2' : 'grid-cols-1'}`}
+      >
         <StatusCard
           title={dict.box}
           icon={Package}
@@ -203,7 +291,7 @@ export default function StatusBar({ dict }: StatusBarProps) {
         description={`${boxData.piecesInBox} / ${piecesPerBox} ${dict.pieces}`}
         icon={Package}
         items={boxScanItems}
-        primaryColumnLabel='DMC'
+        primaryColumnLabel="DMC"
         secondaryColumnLabel={dict.time}
         noItemsMessage={dict.noScans}
         renderDeleteAction={(item) => (
@@ -217,6 +305,27 @@ export default function StatusBar({ dict }: StatusBarProps) {
             }}
           />
         )}
+        renderDeleteAllAction={() => (
+          <DeleteConfirmDialog
+            title={dict.deleteAllParts}
+            description={dict.deleteAllPartsConfirm?.replace(
+              '{count}',
+              boxData.piecesInBox.toString()
+            )}
+            onConfirm={handleDeleteAllParts}
+            labels={{
+              cancel: dict.cancel,
+              delete: dict.delete,
+            }}
+            destructive
+            trigger={
+              <Button variant="destructive" size="sm">
+                <Trash2 className="h-4 w-4" />
+                {dict.deleteAllParts}
+              </Button>
+            }
+          />
+        )}
       />
 
       {/* Pallet Scans Dialog */}
@@ -228,7 +337,7 @@ export default function StatusBar({ dict }: StatusBarProps) {
           description={`${palletData.boxesOnPallet} / ${boxesPerPallet || 0} ${dict.boxes}`}
           icon={Forklift}
           items={palletBoxItems}
-          primaryColumnLabel='HYDRA'
+          primaryColumnLabel="HYDRA"
           secondaryColumnLabel={dict.time}
           noItemsMessage={dict.noScans}
           renderDeleteAction={(item) => (
@@ -240,6 +349,27 @@ export default function StatusBar({ dict }: StatusBarProps) {
                 cancel: dict.cancel,
                 delete: dict.delete,
               }}
+            />
+          )}
+          renderDeleteAllAction={() => (
+            <DeleteConfirmDialog
+              title={dict.deleteAllBoxes}
+              description={dict.deleteAllBoxesConfirm?.replace(
+                '{count}',
+                palletData.boxesOnPallet.toString()
+              )}
+              onConfirm={handleDeleteAllBoxes}
+              labels={{
+                cancel: dict.cancel,
+                delete: dict.delete,
+              }}
+              destructive
+              trigger={
+                <Button variant="destructive" size="sm">
+                  <Trash2 className="h-4 w-4" />
+                  {dict.deleteAllBoxes}
+                </Button>
+              }
             />
           )}
         />

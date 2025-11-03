@@ -37,6 +37,7 @@ export interface ItemListDialogProps {
   secondaryColumnLabel: string;
   noItemsMessage: string;
   renderDeleteAction?: (item: ItemListDialogItem) => ReactNode;
+  renderDeleteAllAction?: () => ReactNode;
 }
 
 export default function ItemListDialog({
@@ -50,35 +51,37 @@ export default function ItemListDialog({
   secondaryColumnLabel,
   noItemsMessage,
   renderDeleteAction,
+  renderDeleteAllAction,
 }: ItemListDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-w-4xl'>
+      <DialogContent className="max-w-4xl">
         <DialogHeader>
-          <DialogTitle className='flex items-center gap-2'>
-            <Icon className='size-6' />
+          <DialogTitle className="flex items-center gap-2">
+            <Icon className="size-6" />
             {title}
           </DialogTitle>
           <DialogDescription>{description}</DialogDescription>
+          {items.length > 0 && renderDeleteAllAction?.()}
         </DialogHeader>
-        <ScrollArea className='h-[400px] w-full'>
+        <ScrollArea className="h-[400px] w-full">
           {items.length > 0 ? (
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>{primaryColumnLabel}</TableHead>
                   <TableHead>{secondaryColumnLabel}</TableHead>
-                  <TableHead className='w-16 text-right'></TableHead>
+                  <TableHead className="w-16 text-right"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {items.map((item) => (
                   <TableRow key={item.id}>
-                    <TableCell className='font-mono'>
+                    <TableCell className="font-mono">
                       {item.primaryValue}
                     </TableCell>
                     <TableCell>{item.secondaryValue}</TableCell>
-                    <TableCell className='text-right'>
+                    <TableCell className="text-right">
                       {renderDeleteAction?.(item)}
                     </TableCell>
                   </TableRow>
@@ -86,7 +89,7 @@ export default function ItemListDialog({
               </TableBody>
             </Table>
           ) : (
-            <div className='text-muted-foreground flex justify-center p-8'>
+            <div className="text-muted-foreground flex justify-center p-8">
               {noItemsMessage}
             </div>
           )}

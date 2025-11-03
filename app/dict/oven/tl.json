@@ -30,6 +30,8 @@
     "title": "Mga proseso ng pagpapainit",
     "newProcess": "Bagong proseso",
     "endProcess": "Tapusin ang proseso",
+    "reportFault": "Iulat ang sira",
+    "finishFault": "Tapusin ang sira",
     "noProcesses": "Walang nasimulan na proseso",
     "table": {
       "start": "Simula",
@@ -40,7 +42,11 @@
     },
     "alerts": {
       "noTemperature": "Walang pagbasa ng temperatura",
-      "noTemperatureDesc": "Hindi nakatanggap ang sistema ng data mula sa mga sensor ng temperatura. Kung tumatakbo na ang oven, makipag-ugnayan sa IT!"
+      "noTemperatureDesc": "Hindi nakatanggap ang sistema ng data mula sa mga sensor ng temperatura. Kung tumatakbo na ang oven, makipag-ugnayan sa IT!",
+      "activeFault": "Sira ng oven",
+      "activeFaultDesc": "nag-ulat ng sira ng oven",
+      "faultStartTime": "Oras ng ulat",
+      "faultReportedBy": "Nag-ulat"
     },
     "deleteDialog": {
       "title": "Tanggalin ang proseso",
@@ -56,6 +62,8 @@
       "deletingProcess": "Tinatanggal ang proseso...",
       "processDeleted": "Natanggal ang proseso!",
       "noActiveProcess": "Walang aktibong proseso para sa HYDRA batch!",
+      "faultReported": "Naiulat ang sira!",
+      "faultFinished": "Natapos ang sira!",
       "contactIT": "Makipag-ugnayan sa IT!"
     },
     "errors": {
@@ -78,7 +86,12 @@
       "articleNotConfigured": "Hindi naka-configure ang artikulo!",
       "wrongProgramForArticle": "Hindi tumutugma ang artikulo sa napiling programa!",
       "databaseError": "Error sa database - makipag-ugnayan sa IT",
-      "noRunningProcesses": "Walang aktibong proseso na tapusin"
+      "noRunningProcesses": "Walang aktibong proseso na tapusin",
+      "activeFaultExists": "May naiulat na sira para sa oven na ito!",
+      "faultReportError": "Error sa pag-uulat ng sira - makipag-ugnayan sa IT",
+      "faultFinishError": "Error sa pagtatapos ng sira - makipag-ugnayan sa IT",
+      "notFinished": "Hindi natapos ang sira",
+      "faultFetchError": "Error sa pagkuha ng sira - makipag-ugnayan sa IT"
     }
   },
   "startBatchDialog": {
@@ -108,5 +121,20 @@
       "cancel": "Kanselahin",
       "continue": "Magpatuloy"
     }
+  },
+  "reportFaultDialog": {
+    "title": "Iulat ang sira ng oven",
+    "description": "Sigurado ka bang nais mong iulat ang sira para sa oven na ito?",
+    "reportedBy": "Naiulat ng",
+    "cancel": "Kanselahin",
+    "confirm": "Iulat ang sira"
+  },
+  "finishFaultDialog": {
+    "title": "Tapusin ang sira ng oven",
+    "description": "Sigurado ka bang naayos na ang sira at handa na ang oven para sa operasyon?",
+    "startTime": "Naiulat ang sira noong",
+    "reportedBy": "Naiulat ng",
+    "cancel": "Kanselahin",
+    "confirm": "Tapusin ang sira"
   }
 }

@@ -30,6 +30,8 @@
     "title": "Procesy wygrzewania",
     "newProcess": "Nowy proces",
     "endProcess": "Zakończ proces",
+    "reportFault": "Zgłoś awarię",
+    "finishFault": "Zakończ awarię",
     "noProcesses": "Brak rozpoczętych procesów",
     "table": {
       "start": "Start",
@@ -40,7 +42,11 @@
     },
     "alerts": {
       "noTemperature": "Brak odczytu temperatury",
-      "noTemperatureDesc": "System nie uzyskał danych z czujników temperatur. Jeśli piec jest już uruchomiony, skontaktuj się z IT!"
+      "noTemperatureDesc": "System nie uzyskał danych z czujników temperatur. Jeśli piec jest już uruchomiony, skontaktuj się z IT!",
+      "activeFault": "Awaria pieca",
+      "activeFaultDesc": "zgłosił awarię pieca",
+      "faultStartTime": "Czas zgłoszenia",
+      "faultReportedBy": "Zgłosił"
     },
     "deleteDialog": {
       "title": "Usuń proces",
@@ -56,6 +62,8 @@
       "deletingProcess": "Usuwanie procesu...",
       "processDeleted": "Proces usunięty!",
       "noActiveProcess": "Brak aktywnego procesu dla HYDRA batch!",
+      "faultReported": "Awaria zgłoszona!",
+      "faultFinished": "Awaria zakończona!",
       "contactIT": "Skontaktuj się z IT!"
     },
     "errors": {
@@ -78,7 +86,12 @@
       "articleNotConfigured": "Artykuł nie jest skonfigurowany!",
       "wrongProgramForArticle": "Artykuł nie pasuje do wybranego programu!",
       "databaseError": "Błąd bazy danych - skontaktuj się z IT",
-      "noRunningProcesses": "Brak aktywnych procesów do zakończenia"
+      "noRunningProcesses": "Brak aktywnych procesów do zakończenia",
+      "activeFaultExists": "Awaria już zgłoszona dla tego pieca!",
+      "faultReportError": "Błąd zgłaszania awarii - skontaktuj się z IT",
+      "faultFinishError": "Błąd kończenia awarii - skontaktuj się z IT",
+      "notFinished": "Nie udało się zakończyć awarii",
+      "faultFetchError": "Błąd pobierania awarii - skontaktuj się z IT"
     }
   },
   "startBatchDialog": {
@@ -108,5 +121,20 @@
       "cancel": "Anuluj",
       "continue": "Kontynuuj"
     }
+  },
+  "reportFaultDialog": {
+    "title": "Zgłoś awarię pieca",
+    "description": "Czy na pewno chcesz zgłosić awarię tego pieca?",
+    "reportedBy": "Zgłoszone przez",
+    "cancel": "Anuluj",
+    "confirm": "Zgłoś awarię"
+  },
+  "finishFaultDialog": {
+    "title": "Zakończ awarię pieca",
+    "description": "Czy na pewno awaria została naprawiona i piec jest gotowy do pracy?",
+    "startTime": "Awaria zgłoszona o",
+    "reportedBy": "Zgłoszone przez",
+    "cancel": "Anuluj",
+    "confirm": "Zakończ awarię"
   }
 }

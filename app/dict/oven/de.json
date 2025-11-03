@@ -30,6 +30,8 @@
     "title": "Heizprozesse",
     "newProcess": "Neuer Prozess",
     "endProcess": "Prozess beenden",
+    "reportFault": "Störung melden",
+    "finishFault": "Störung beenden",
     "noProcesses": "Keine gestarteten Prozesse",
     "table": {
       "start": "Start",
@@ -40,7 +42,11 @@
     },
     "alerts": {
       "noTemperature": "Keine Temperaturmessung",
-      "noTemperatureDesc": "System erhielt keine Daten von Temperatursensoren. Wenn der Ofen bereits läuft, kontaktieren Sie die IT!"
+      "noTemperatureDesc": "System erhielt keine Daten von Temperatursensoren. Wenn der Ofen bereits läuft, kontaktieren Sie die IT!",
+      "activeFault": "Ofenstörung",
+      "activeFaultDesc": "hat Ofenstörung gemeldet",
+      "faultStartTime": "Meldezeit",
+      "faultReportedBy": "Gemeldet"
     },
     "deleteDialog": {
       "title": "Prozess löschen",
@@ -56,6 +62,8 @@
       "deletingProcess": "Prozess wird gelöscht...",
       "processDeleted": "Prozess gelöscht!",
       "noActiveProcess": "Kein aktiver Prozess für HYDRA-Charge!",
+      "faultReported": "Störung gemeldet!",
+      "faultFinished": "Störung beendet!",
       "contactIT": "IT kontaktieren!"
     },
     "errors": {
@@ -78,7 +86,12 @@
       "articleNotConfigured": "Artikel ist nicht konfiguriert!",
       "wrongProgramForArticle": "Artikel passt nicht zum ausgewählten Programm!",
       "databaseError": "Datenbankfehler - IT kontaktieren",
-      "noRunningProcesses": "Keine aktiven Prozesse zu beenden"
+      "noRunningProcesses": "Keine aktiven Prozesse zu beenden",
+      "activeFaultExists": "Störung bereits für diesen Ofen gemeldet!",
+      "faultReportError": "Störungsmeldungsfehler - IT kontaktieren",
+      "faultFinishError": "Störungsabschlussfehler - IT kontaktieren",
+      "notFinished": "Störung konnte nicht beendet werden",
+      "faultFetchError": "Störungsabruffehler - IT kontaktieren"
     }
   },
   "startBatchDialog": {
@@ -108,5 +121,20 @@
       "cancel": "Abbrechen",
       "continue": "Fortfahren"
     }
+  },
+  "reportFaultDialog": {
+    "title": "Ofenstörung melden",
+    "description": "Möchten Sie wirklich eine Störung für diesen Ofen melden?",
+    "reportedBy": "Gemeldet von",
+    "cancel": "Abbrechen",
+    "confirm": "Störung melden"
+  },
+  "finishFaultDialog": {
+    "title": "Ofenstörung beenden",
+    "description": "Ist die Störung behoben und der Ofen betriebsbereit?",
+    "startTime": "Störung gemeldet um",
+    "reportedBy": "Gemeldet von",
+    "cancel": "Abbrechen",
+    "confirm": "Störung beenden"
   }
 }

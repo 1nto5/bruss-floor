@@ -31,3 +31,13 @@ export type OvenProcessType = {
   // Server-calculated values
   isOverdue?: boolean; // True if currentTime > (startTime + targetDuration + durationTolerance)
 };
+
+export type OvenFaultReportType = {
+  id: string;
+  oven: string;
+  reportedBy: string[];
+  startTime: Date;
+  endTime: Date | null;
+  finishedBy: string[] | null;
+  status: 'active' | 'finished';
+};

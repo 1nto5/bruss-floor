@@ -5,11 +5,16 @@ import { dbc } from '@/lib/db/mongo';
 
 // Type definitions
 import { ObjectId } from 'mongodb';
-import { OvenProcessType, OvenProgramConfigType } from './lib/types';
+import {
+  OvenProcessType,
+  OvenProgramConfigType,
+  OvenFaultReportType,
+} from './lib/types';
 import {
   completeProcessSchema,
   loginType,
   startBatchSchemaServer,
+  finishFaultSchema,
 } from './lib/zod';
 
 /**
@@ -593,5 +598,156 @@ export async function fetchOvenLastAvgTemp(
   } catch (error) {
     console.error('fetchOvenLastAvgTemp error:', error);
     return { error: 'temp error' };
+  }
+}
+
+/**
+ * Reports a fault for an oven
+ * @param oven - The oven identifier
+ * @param operators - Array of operator identifiers reporting the fault
+ * @returns Success status with faultId or error message
+ */
+export async function reportOvenFault(
+  oven: string,
+  operators: string[],
+): Promise<{ error: string } | { success: boolean; faultId: string }> {
+  try {
+    // Validate operators array
+    if (!operators || operators.length === 0) {
+      return { error: 'no operator' };
+    }
+
+    const collection = await dbc('oven_fault_reports');
+
+    // Check if there's already an active fault for this oven
+    const activeFault = await collection.findOne({
+      oven,
+      status: 'active',
+    });
+
+    if (activeFault) {
+      return { error: 'active fault exists' };
+    }
+
+    // Create new fault report
+    const newFault = {
+      oven,
+      reportedBy: operators,
+      startTime: new Date(),
+      endTime: null,
+      finishedBy: null,
+      status: 'active' as const,
+    };
+
+    const result = await collection.insertOne(newFault);
+    if (!result.insertedId) {
+      return { error: 'not created' };
+    }
+
+    return { success: true, faultId: result.insertedId.toString() };
+  } catch (error) {
+    console.error('reportOvenFault error:', error);
+    return { error: 'fault report error' };
+  }
+}
+
+/**
+ * Finishes/resolves an active fault report
+ * @param faultId - The fault report ID to finish
+ * @param operators - Array of operator identifiers who finished the fault
+ * @returns Success status or error message
+ */
+export async function finishOvenFault(
+  faultId: string,
+  operators: string[],
+): Promise<{ error: string } | { success: boolean }> {
+  try {
+    // Validate input data using ZOD schema
+    const validationResult = finishFaultSchema.safeParse({
+      faultId,
+    });
+
+    if (!validationResult.success) {
+      return { error: 'validation failed' };
+    }
+
+    // Validate operators array
+    if (!operators || operators.length === 0) {
+      return { error: 'no operator' };
+    }
+
+    const collection = await dbc('oven_fault_reports');
+
+    const result = await collection.updateOne(
+      { _id: new ObjectId(faultId), status: 'active' },
+      {
+        $set: {
+          status: 'finished',
+          endTime: new Date(),
+          finishedBy: operators,
+          updatedAt: new Date(),
+        },
+      },
+    );
+
+    if (result.modifiedCount > 0) {
+      return { success: true };
+    }
+
+    return { error: 'not finished' };
+  } catch (error) {
+    console.error('finishOvenFault error:', error);
+    return { error: 'fault finish error' };
+  }
+}
+
+/**
+ * Fetches the active fault report for a specific oven
+ * @param oven - The oven identifier
+ * @returns Active fault report or null if none exists, or error message
+ */
+export async function fetchActiveOvenFault(
+  oven: string,
+): Promise<{ success: OvenFaultReportType | null } | { error: string }> {
+  try {
+    const collection = await dbc('oven_fault_reports');
+    const fault = await collection.findOne({
+      oven,
+      status: 'active',
+    });
+
+    if (!fault) {
+      return { success: null };
+    }
+
+    // Fetch operator names for reportedBy identifiers
+    const employeesCollection = await dbc('employees');
+    const reportedByNames: string[] = [];
+    
+    for (const identifier of fault.reportedBy) {
+      const employee = await employeesCollection.findOne({ identifier });
+      if (employee && employee.firstName && employee.lastName) {
+        const firstNameInitial = employee.firstName.charAt(0).toUpperCase();
+        const lastNameInitial = employee.lastName.charAt(0).toUpperCase();
+        reportedByNames.push(`${employee.firstName} ${lastNameInitial}. (${identifier})`);
+      } else {
+        reportedByNames.push(identifier);
+      }
+    }
+
+    return {
+      success: {
+        id: fault._id.toString(),
+        oven: fault.oven,
+        reportedBy: reportedByNames,
+        startTime: fault.startTime,
+        endTime: fault.endTime,
+        finishedBy: fault.finishedBy,
+        status: fault.status,
+      },
+    };
+  } catch (error) {
+    console.error('fetchActiveOvenFault error:', error);
+    return { error: 'fault fetch error' };
   }
 }

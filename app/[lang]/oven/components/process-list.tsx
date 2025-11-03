@@ -26,6 +26,7 @@ import {
 import { Locale } from '@/lib/config/i18n';
 import {
   AlertTriangle,
+  CheckCircle,
   Play,
   ScanLine,
   StopCircle,
@@ -41,16 +42,21 @@ import {
   completeOvenProcess,
   deleteOvenProcess,
   startOvenProcess,
+  reportOvenFault,
+  finishOvenFault,
 } from '../actions';
 import { useOvenLastAvgTemp } from '../data/get-oven-last-avg-temp';
 import { useGetOvenProcesses } from '../data/get-oven-processes';
+import { useActiveOvenFault } from '../data/get-active-oven-fault';
 import type { Dictionary } from '../lib/dict';
 import { useOperatorStore, useOvenStore, useVolumeStore } from '../lib/stores';
-import type { OvenProcessType } from '../lib/types';
+import type { OvenProcessType, OvenFaultReportType } from '../lib/types';
 import type { StartBatchType } from '../lib/zod';
 import { startBatchSchema } from '../lib/zod';
 import { EndAllProcessesDialog } from './end-all-processes-dialog';
 import { StartBatchDialog } from './start-batch-dialog';
+import { ReportFaultDialog } from './report-fault-dialog';
+import { FinishFaultDialog } from './finish-fault-dialog';
 
 interface ProcessListProps {
   dict: Dictionary;
@@ -68,6 +74,12 @@ export default function ProcessList({ dict, lang }: ProcessListProps) {
     !isNaN(tempData.avgTemp)
       ? tempData.avgTemp
       : null;
+  
+  const { data: faultData, refetch: refetchFault } = useActiveOvenFault(selectedOven);
+  const activeFault = 
+    faultData && 'success' in faultData && faultData.success 
+      ? faultData.success 
+      : null;
 
   const formatDateTimeLocal = (date: Date | string | null | undefined): string => {
     if (!date) return '-';
@@ -80,6 +92,8 @@ export default function ProcessList({ dict, lang }: ProcessListProps) {
   const [endAllDialogOpen, setEndAllDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [processToDelete, setProcessToDelete] = useState<string | null>(null);
+  const [reportFaultDialogOpen, setReportFaultDialogOpen] = useState(false);
+  const [finishFaultDialogOpen, setFinishFaultDialogOpen] = useState(false);
 
   const articleInputRef = useRef<HTMLInputElement>(null!);
   const batchInputRef = useRef<HTMLInputElement>(null!);
@@ -144,6 +158,11 @@ export default function ProcessList({ dict, lang }: ProcessListProps) {
         'wrong program for article': 'wrongProgramForArticle',
         'database error': 'databaseError',
         'no running processes': 'noRunningProcesses',
+        'active fault exists': 'activeFaultExists',
+        'fault report error': 'faultReportError',
+        'fault finish error': 'faultFinishError',
+        'not finished': 'notFinished',
+        'fault fetch error': 'faultFetchError',
       };
       const errorKey = errorMap[serverError];
       return errorKey
@@ -308,6 +327,68 @@ export default function ProcessList({ dict, lang }: ProcessListProps) {
     setProcessToDelete(null);
   }, []);
 
+  const handleReportFault = useCallback(() => {
+    setReportFaultDialogOpen(true);
+  }, []);
+
+  const handleConfirmReportFault = useCallback(async () => {
+    const result = await reportOvenFault(selectedOven, operators);
+
+    if ('success' in result && result.success) {
+      playNok();
+      await refetchFault();
+      toast.success(dict.processList.toasts.faultReported);
+      return true;
+    }
+
+    if ('error' in result && result.error) {
+      playNok();
+      const errorMessage = translateError(result.error);
+      toast.error(errorMessage);
+      return false;
+    }
+
+    playNok();
+    console.error('Unexpected response format:', result);
+    toast.error(dict.processList.toasts.contactIT);
+    return false;
+  }, [selectedOven, operators, refetchFault, playNok, dict, translateError]);
+
+  const handleFinishFault = useCallback(() => {
+    setFinishFaultDialogOpen(true);
+  }, []);
+
+  const handleConfirmFinishFault = useCallback(async () => {
+    if (!activeFault) return false;
+
+    const result = await finishOvenFault(activeFault.id, operators);
+
+    if ('success' in result && result.success) {
+      playOvenOut();
+      await refetchFault();
+      toast.success(dict.processList.toasts.faultFinished);
+      return true;
+    }
+
+    if ('error' in result && result.error) {
+      playNok();
+      const errorMessage = translateError(result.error);
+      toast.error(errorMessage);
+      return false;
+    }
+
+    playNok();
+    console.error('Unexpected response format:', result);
+    toast.error(dict.processList.toasts.contactIT);
+    return false;
+  }, [activeFault, operators, refetchFault, playNok, playOvenOut, dict, translateError]);
+
+  const operatorNames = useMemo(() => {
+    return [operator1, operator2, operator3]
+      .filter((op) => op && op.firstName && op.lastName)
+      .map((op) => `${op!.firstName} ${op!.lastName}`);
+  }, [operator1, operator2, operator3]);
+
   if (error) {
     return <ErrorComponent error={error} reset={() => refetch()} />;
   }
@@ -320,8 +401,9 @@ export default function ProcessList({ dict, lang }: ProcessListProps) {
             <div className='flex gap-4'>
               <Button
                 onClick={() => setStartDialogOpen(true)}
-                className='w-1/2'
+                className='w-1/3'
                 size='lg'
+                disabled={!!activeFault}
               >
                 <Play />
                 {dict.processList.newProcess}
@@ -329,13 +411,33 @@ export default function ProcessList({ dict, lang }: ProcessListProps) {
               <Button
                 onClick={handleEndAllProcesses}
                 variant='secondary'
-                className='w-1/2'
+                className='w-1/3'
                 size='lg'
                 disabled={!hasRunningProcesses}
               >
                 <StopCircle />
                 {dict.processList.endProcess}
               </Button>
+              {activeFault ? (
+                <Button
+                  onClick={handleFinishFault}
+                  className='w-1/3'
+                  size='lg'
+                >
+                  <CheckCircle />
+                  {dict.processList.finishFault}
+                </Button>
+              ) : (
+                <Button
+                  onClick={handleReportFault}
+                  variant='destructive'
+                  className='w-1/3'
+                  size='lg'
+                >
+                  <AlertTriangle />
+                  {dict.processList.reportFault}
+                </Button>
+              )}
             </div>
           </CardHeader>
           <CardContent className='pt-2'>
@@ -343,6 +445,18 @@ export default function ProcessList({ dict, lang }: ProcessListProps) {
               <Skeleton className='h-96 w-full' />
             ) : isSuccess(data) && data.success.length > 0 ? (
               <div className='space-y-4'>
+                {activeFault && (
+                  <Alert variant='destructive'>
+                    <AlertTriangle className='h-4 w-4' />
+                    <AlertTitle>
+                      {dict.processList.alerts.activeFault}
+                    </AlertTitle>
+                    <AlertDescription>
+                      <div>{dict.processList.alerts.faultReportedBy}: {activeFault.reportedBy.join(', ')}</div>
+                      <div>{dict.processList.alerts.faultStartTime}: {formatDateTimeLocal(activeFault.startTime)}</div>
+                    </AlertDescription>
+                  </Alert>
+                )}
                 {currentTemp === null &&
                   !data.success.every(
                     (process) => process.status === 'prepared',
@@ -473,6 +587,22 @@ export default function ProcessList({ dict, lang }: ProcessListProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <ReportFaultDialog
+        open={reportFaultDialogOpen}
+        onOpenChange={setReportFaultDialogOpen}
+        onConfirm={handleConfirmReportFault}
+        operatorNames={operatorNames}
+        dict={dict}
+      />
+
+      <FinishFaultDialog
+        open={finishFaultDialogOpen}
+        onOpenChange={setFinishFaultDialogOpen}
+        onConfirm={handleConfirmFinishFault}
+        fault={activeFault}
+        dict={dict}
+      />
     </>
   );
 }

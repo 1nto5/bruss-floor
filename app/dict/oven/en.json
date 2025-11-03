@@ -30,6 +30,8 @@
     "title": "Heating processes",
     "newProcess": "New process",
     "endProcess": "End process",
+    "reportFault": "Report fault",
+    "finishFault": "Finish fault",
     "noProcesses": "No processes started",
     "table": {
       "start": "Start",
@@ -40,7 +42,11 @@
     },
     "alerts": {
       "noTemperature": "No temperature reading",
-      "noTemperatureDesc": "System didn't receive data from temperature sensors. If the oven is already running, contact IT!"
+      "noTemperatureDesc": "System didn't receive data from temperature sensors. If the oven is already running, contact IT!",
+      "activeFault": "Oven fault",
+      "activeFaultDesc": "reported oven fault",
+      "faultStartTime": "Report time",
+      "faultReportedBy": "Reported"
     },
     "deleteDialog": {
       "title": "Delete process",
@@ -56,6 +62,8 @@
       "deletingProcess": "Deleting process...",
       "processDeleted": "Process deleted!",
       "noActiveProcess": "No active process for HYDRA batch!",
+      "faultReported": "Fault reported!",
+      "faultFinished": "Fault finished!",
       "contactIT": "Contact IT!"
     },
     "errors": {
@@ -78,7 +86,12 @@
       "articleNotConfigured": "Article is not configured!",
       "wrongProgramForArticle": "Article doesn't match selected program!",
       "databaseError": "Database error - contact IT",
-      "noRunningProcesses": "No active processes to end"
+      "noRunningProcesses": "No active processes to end",
+      "activeFaultExists": "Fault already reported for this oven!",
+      "faultReportError": "Fault report error - contact IT",
+      "faultFinishError": "Fault finish error - contact IT",
+      "notFinished": "Failed to finish fault",
+      "faultFetchError": "Fault fetch error - contact IT"
     }
   },
   "startBatchDialog": {
@@ -108,5 +121,20 @@
       "cancel": "Cancel",
       "continue": "Continue"
     }
+  },
+  "reportFaultDialog": {
+    "title": "Report oven fault",
+    "description": "Are you sure you want to report a fault for this oven?",
+    "reportedBy": "Reported by",
+    "cancel": "Cancel",
+    "confirm": "Report fault"
+  },
+  "finishFaultDialog": {
+    "title": "Finish oven fault",
+    "description": "Are you sure the fault has been resolved and the oven is ready for operation?",
+    "startTime": "Fault reported at",
+    "reportedBy": "Reported by",
+    "cancel": "Cancel",
+    "confirm": "Finish fault"
   }
 }

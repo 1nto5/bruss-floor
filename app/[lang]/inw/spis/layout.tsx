@@ -13,22 +13,24 @@ export const metadata: Metadata = {
   // description: 'Company helper applications',
 };
 
-export default async function RootLayout(props: { children: React.ReactNode }) {
+export default async function InwSpisLayout(props: {
+  children: React.ReactNode;
+}) {
   const { children } = props;
 
   // const dictionary = await getDictionary(lang);
   return (
     <ThemeProvider
-      attribute='class'
-      defaultTheme='system'
+      attribute="class"
+      defaultTheme="system"
       enableSystem
       // disableTransitionOnChange
     >
       <QueryProvider>
-        <div className='flex min-h-screen flex-col space-y-1'>
+        <div className="flex min-h-screen flex-col space-y-1">
           <Header />
-          <main className='mx-auto max-w-7xl flex-1'>
-            <div className='flex justify-center'>{children}</div>
+          <main className="mx-auto max-w-7xl flex-1">
+            <div className="flex justify-center">{children}</div>
           </main>
           <Footer />
         </div>

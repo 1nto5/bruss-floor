@@ -14,7 +14,7 @@ interface ProLayoutProps {
 /**
  * Universal layout wrapper for production floor applications
  * Provides consistent layout structure with configurable spacing
- * Default padding: px-2 py-2 (from dmcheck-2)
+ * Default padding: px-2 py-2 (from dmcheck)
  */
 export default function ProLayout({
   children,

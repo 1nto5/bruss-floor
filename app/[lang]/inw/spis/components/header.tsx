@@ -12,7 +12,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
-import { SquarePen, StickyNote, UserPen, X, Check } from 'lucide-react';
+import { Check, SquarePen, StickyNote, UserPen, X } from 'lucide-react';
 import { useState } from 'react';
 import {
   useCardStore,
@@ -57,7 +57,7 @@ export default function Header() {
       >
         <div className='relative mx-auto flex h-4 w-full max-w-7xl items-center justify-between'>
           <div className='flex items-center'>
-            <span className='font-mono font-semibold'>inw-2 spis</span>
+            <span className='font-mono font-semibold'>inw spis</span>
           </div>
 
           <div className='flex items-center space-x-1'>
@@ -125,13 +125,16 @@ export default function Header() {
               {pendingAction?.description}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="flex flex-row gap-2 w-full">
-            <AlertDialogCancel className="w-1/4 flex items-center justify-center gap-2">
-              <X className="h-4 w-4" />
+          <AlertDialogFooter className='flex w-full flex-row gap-2'>
+            <AlertDialogCancel className='flex w-1/4 items-center justify-center gap-2'>
+              <X className='h-4 w-4' />
               Anuluj
             </AlertDialogCancel>
-            <AlertDialogAction onClick={executeAction} className="w-3/4 flex items-center justify-center gap-2">
-              <Check className="h-4 w-4" />
+            <AlertDialogAction
+              onClick={executeAction}
+              className='flex w-3/4 items-center justify-center gap-2'
+            >
+              <Check className='h-4 w-4' />
               Kontynuuj
             </AlertDialogAction>
           </AlertDialogFooter>

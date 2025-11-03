@@ -8,10 +8,10 @@ import { getDictionary } from './lib/dict';
 import Providers from './lib/query-provider';
 
 export const metadata: Metadata = {
-  title: 'DMCheck 2 (BRUSS)',
+  title: 'DMCheck (BRUSS)',
 };
 
-export default async function DmCheck2Layout(props: {
+export default async function DmCheckLayout(props: {
   children: React.ReactNode;
   params: Promise<{ lang: string }>;
 }) {

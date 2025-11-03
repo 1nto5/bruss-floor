@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   // description: 'Company helper applications',
 };
 
-export default async function RootLayout(props: {
+export default async function OvenLayout(props: {
   children: React.ReactNode;
   params: Promise<{ lang: string }>;
 }) {
@@ -26,8 +26,8 @@ export default async function RootLayout(props: {
   const dict = await getDictionary(locale);
   return (
     <ThemeProvider
-      attribute='class'
-      defaultTheme='system'
+      attribute="class"
+      defaultTheme="system"
       enableSystem
       // disableTransitionOnChange
     >

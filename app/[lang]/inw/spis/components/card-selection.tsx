@@ -9,7 +9,7 @@ import { newCardSchema as formSchema } from '../lib/zod';
 import {
   sectorsSelectOptions,
   warehouseSelectOptions,
-} from '@/app/[lang]/inw-2/spis/lib/options';
+} from '@/app/[lang]/inw/spis/lib/options';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -54,7 +54,7 @@ export default function CardSelection() {
     usePersonalNumberStore();
   const { setCard } = useCardStore();
   const persons = [personalNumber1, personalNumber2, personalNumber3].filter(
-    (person) => person
+    (person) => person,
   );
   const { data, error, refetch, isFetching } = useGetCards(persons);
 
@@ -74,12 +74,12 @@ export default function CardSelection() {
         switch (res.error) {
           case 'persons not found':
             toast.error(
-              'Problem z zalogowanymi osobami, zaloguj się ponownie!!'
+              'Problem z zalogowanymi osobami, zaloguj się ponownie!!',
             );
             break;
           case 'not created':
             toast.error(
-              'Nie udało się utworzyć karty! Spróbuj ponownie lub skontaktuj się z IT!'
+              'Nie udało się utworzyć karty! Spróbuj ponownie lub skontaktuj się z IT!',
             );
             break;
           default:
@@ -103,12 +103,12 @@ export default function CardSelection() {
   }
 
   return (
-    <Tabs defaultValue="new" className="sm:w-[600px]">
-      <TabsList className="grid w-full grid-cols-2">
-        <TabsTrigger value="new">Utwórz nową kartę</TabsTrigger>
-        <TabsTrigger value="exists">Wybierz istniejącą kartę</TabsTrigger>
+    <Tabs defaultValue='new' className='sm:w-[600px]'>
+      <TabsList className='grid w-full grid-cols-2'>
+        <TabsTrigger value='new'>Utwórz nową kartę</TabsTrigger>
+        <TabsTrigger value='exists'>Wybierz istniejącą kartę</TabsTrigger>
       </TabsList>
-      <TabsContent value="new">
+      <TabsContent value='new'>
         <Card>
           <CardHeader>
             <CardTitle>Nowa karta</CardTitle>
@@ -116,28 +116,28 @@ export default function CardSelection() {
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmitNewCard)}>
-              <CardContent className="grid w-full items-center gap-4">
+              <CardContent className='grid w-full items-center gap-4'>
                 <FormField
                   control={form.control}
-                  name="warehouse"
+                  name='warehouse'
                   render={({ field }) => (
-                    <FormItem className="space-y-3">
+                    <FormItem className='space-y-3'>
                       <FormLabel>Magazyn</FormLabel>
                       <FormControl>
                         <RadioGroup
                           onValueChange={field.onChange}
                           defaultValue={field.value}
-                          className="flex flex-col space-y-1"
+                          className='flex flex-col space-y-1'
                         >
                           {warehouseSelectOptions.map((warehouse) => (
                             <FormItem
                               key={warehouse.value}
-                              className="flex items-center space-y-0 space-x-3"
+                              className='flex items-center space-y-0 space-x-3'
                             >
                               <FormControl>
                                 <RadioGroupItem value={warehouse.value} />
                               </FormControl>
-                              <FormLabel className="font-normal">
+                              <FormLabel className='font-normal'>
                                 {warehouse.label}
                               </FormLabel>
                             </FormItem>
@@ -150,25 +150,25 @@ export default function CardSelection() {
                 />
                 <FormField
                   control={form.control}
-                  name="sector"
+                  name='sector'
                   render={({ field }) => (
-                    <FormItem className="space-y-3">
+                    <FormItem className='space-y-3'>
                       <FormLabel>Sektor</FormLabel>
                       <FormControl>
                         <RadioGroup
                           onValueChange={field.onChange}
                           defaultValue={field.value}
-                          className="flex flex-col space-y-1"
+                          className='flex flex-col space-y-1'
                         >
                           {sectorsSelectOptions.map((sector) => (
                             <FormItem
                               key={sector.value}
-                              className="flex items-center space-y-0 space-x-3"
+                              className='flex items-center space-y-0 space-x-3'
                             >
                               <FormControl>
                                 <RadioGroupItem value={sector.value} />
                               </FormControl>
-                              <FormLabel className="font-normal">
+                              <FormLabel className='font-normal'>
                                 {sector.label}
                               </FormLabel>
                             </FormItem>
@@ -180,8 +180,8 @@ export default function CardSelection() {
                   )}
                 />
               </CardContent>
-              <CardFooter className="flex justify-end">
-                <Button type="submit" disabled={isPending}>
+              <CardFooter className='flex justify-end'>
+                <Button type='submit' disabled={isPending}>
                   <Loader2 className={isPending ? 'animate-spin' : ''} />
                   Utwórz kartę
                 </Button>
@@ -190,7 +190,7 @@ export default function CardSelection() {
           </Form>
         </Card>
       </TabsContent>
-      <TabsContent value="exists">
+      <TabsContent value='exists'>
         {data?.success ? (
           <Card>
             <CardHeader>
@@ -201,7 +201,7 @@ export default function CardSelection() {
                 Tylko karty gdzie autorem jest jedna z zalogowanych osób.
               </CardDescription>
             </CardHeader>
-            <CardContent className="grid w-full items-center gap-4">
+            <CardContent className='grid w-full items-center gap-4'>
               <Table>
                 {/* <TableCaption>A list of instruments.</TableCaption> */}
                 <TableHeader>
@@ -252,7 +252,7 @@ export default function CardSelection() {
                 Tylko karty gdzie autorem jest jedna z zalogowanych osób.
               </CardDescription>
             </CardHeader>
-            <CardContent className="grid w-full items-center gap-4">
+            <CardContent className='grid w-full items-center gap-4'>
               <Skeleton>
                 <Table>
                   {/* <TableCaption>A list of instruments.</TableCaption> */}

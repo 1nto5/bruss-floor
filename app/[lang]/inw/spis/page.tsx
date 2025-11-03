@@ -11,7 +11,7 @@ import {
 
 // import { getDictionary } from '@/lib/dict';
 
-export default function App() {
+export default function InwSpisPage() {
   const { personalNumber1 } = usePersonalNumberStore();
   const { card } = useCardStore();
   const { position } = usePositionStore();

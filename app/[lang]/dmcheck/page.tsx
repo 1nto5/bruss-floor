@@ -2,7 +2,7 @@ import type { Locale } from '@/lib/config/i18n';
 import App from './components/app';
 import { getDictionary } from './lib/dict';
 
-export default async function DmCheck2Page({
+export default async function DmCheckPage({
   params,
 }: {
   params: Promise<{ lang: Locale }>;

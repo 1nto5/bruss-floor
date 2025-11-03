@@ -34,7 +34,7 @@ export const useOperatorStore = create<OperatorStoreType>()(
       setOperator3: (operator) => set({ operator3: operator }),
       logout: () => set({ operator1: null, operator2: null, operator3: null }),
     }),
-    { name: 'dmcheck2-operators' },
+    { name: 'dmcheck-operators' },
   ),
 );
 
@@ -74,39 +74,45 @@ export const useScanStore = create<ScanStoreType>()(
         boxesOnPallet: 0,
         palletIsFull: false,
       },
-      setSelectedArticle: (article) => set({
-        selectedArticle: article,
-        lastScans: [],
-        isRework: false,
-        boxStatus: { piecesInBox: 0, boxIsFull: false },
-        palletStatus: { boxesOnPallet: 0, palletIsFull: false },
-      }),
-      addScan: (dmc) => set((state) => ({
-        lastScans: [
-          { dmc, time: new Date() },
-          ...state.lastScans.slice(0, 4), // Keep only last 5
-        ],
-      })),
-      removeScan: (dmc) => set((state) => ({
-        lastScans: state.lastScans.filter((scan) => scan.dmc !== dmc),
-      })),
+      setSelectedArticle: (article) =>
+        set({
+          selectedArticle: article,
+          lastScans: [],
+          isRework: false,
+          boxStatus: { piecesInBox: 0, boxIsFull: false },
+          palletStatus: { boxesOnPallet: 0, palletIsFull: false },
+        }),
+      addScan: (dmc) =>
+        set((state) => ({
+          lastScans: [
+            { dmc, time: new Date() },
+            ...state.lastScans.slice(0, 4), // Keep only last 5
+          ],
+        })),
+      removeScan: (dmc) =>
+        set((state) => ({
+          lastScans: state.lastScans.filter((scan) => scan.dmc !== dmc),
+        })),
       setIsRework: (isRework) => set({ isRework }),
-      updateBoxStatus: (piecesInBox, boxIsFull) => set({
-        boxStatus: { piecesInBox, boxIsFull },
-      }),
-      updatePalletStatus: (boxesOnPallet, palletIsFull) => set({
-        palletStatus: { boxesOnPallet, palletIsFull },
-      }),
-      clearArticle: () => set({
-        selectedArticle: null,
-        lastScans: [],
-        isRework: false,
-        boxStatus: { piecesInBox: 0, boxIsFull: false },
-        palletStatus: { boxesOnPallet: 0, palletIsFull: false },
-      }),
+      updateBoxStatus: (piecesInBox, boxIsFull) =>
+        set({
+          boxStatus: { piecesInBox, boxIsFull },
+        }),
+      updatePalletStatus: (boxesOnPallet, palletIsFull) =>
+        set({
+          palletStatus: { boxesOnPallet, palletIsFull },
+        }),
+      clearArticle: () =>
+        set({
+          selectedArticle: null,
+          lastScans: [],
+          isRework: false,
+          boxStatus: { piecesInBox: 0, boxIsFull: false },
+          palletStatus: { boxesOnPallet: 0, palletIsFull: false },
+        }),
       clearScans: () => set({ lastScans: [] }),
     }),
-    { name: 'dmcheck2-scans' },
+    { name: 'dmcheck-scans' },
   ),
 );
 
@@ -122,6 +128,6 @@ export const useVolumeStore = create<VolumeStoreType>()(
       volume: 0.75,
       setVolume: (volume) => set({ volume }),
     }),
-    { name: 'dmcheck2-volume' },
+    { name: 'dmcheck-volume' },
   ),
 );

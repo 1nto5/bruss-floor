@@ -96,3 +96,12 @@ export const startOvenProcessSchema = z.object({
 });
 
 export type StartOvenProcessType = z.infer<typeof startOvenProcessSchema>;
+
+// Schema for finishing a fault report (server-side validation)
+export const finishFaultSchema = z.object({
+  faultId: z.string().regex(/^[0-9a-fA-F]{24}$/, {
+    message: 'invalid id',
+  }),
+});
+
+export type FinishFaultType = z.infer<typeof finishFaultSchema>;

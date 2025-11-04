@@ -395,7 +395,7 @@ export default function ProcessList({ dict, lang }: ProcessListProps) {
             <div className='flex gap-4'>
               <Button
                 onClick={() => setStartDialogOpen(true)}
-                className='w-1/3'
+                className='flex-1'
                 size='lg'
                 disabled={!!activeFault}
               >
@@ -405,7 +405,7 @@ export default function ProcessList({ dict, lang }: ProcessListProps) {
               <Button
                 onClick={handleEndAllProcesses}
                 variant='secondary'
-                className='w-1/3'
+                className='flex-1'
                 size='lg'
                 disabled={!hasRunningProcesses}
               >
@@ -416,23 +416,13 @@ export default function ProcessList({ dict, lang }: ProcessListProps) {
                 <Button
                   onClick={handleFinishFault}
                   variant='destructive'
-                  className='w-1/3'
+                  className='flex-1'
                   size='lg'
                 >
                   <CheckCircle />
                   {dict.processList.finishFault}
                 </Button>
-              ) : (
-                <Button
-                  onClick={handleReportFault}
-                  variant='destructive'
-                  className='w-1/3'
-                  size='lg'
-                >
-                  <AlertTriangle />
-                  {dict.processList.reportFault}
-                </Button>
-              )}
+              ) : null}
             </div>
           </CardHeader>
           <CardContent className='pt-2'>

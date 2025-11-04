@@ -1,4 +1,5 @@
 'use client';
+import Loading from '@/app/[lang]/components/loading';
 import LoginWithKeypad from '@/app/[lang]/components/login-with-keypad';
 import type { Locale } from '@/lib/config/i18n';
 import { login } from '../actions';
@@ -22,7 +23,7 @@ export default function App({ dict, lang }: AppProps) {
     setOperator2,
     setOperator3,
   } = useOperatorStore();
-  const { selectedOven, selectedProgram } = useOvenStore();
+  const { selectedOven, selectedProgram, isLoadingProgram } = useOvenStore();
 
   if (!operator1 && !operator2 && !operator3) {
     return (
@@ -38,6 +39,8 @@ export default function App({ dict, lang }: AppProps) {
     );
   } else if (!selectedOven) {
     return <OvenSelection dict={dict} />;
+  } else if (isLoadingProgram) {
+    return <Loading />;
   } else if (selectedProgram === null) {
     return <ProgramSelection dict={dict} />;
   } else {

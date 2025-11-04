@@ -35,6 +35,7 @@ export const useOperatorStore = create<OperatorStoreType>()(
 type OvenStateType = {
   selectedOven: string;
   selectedProgram: number | null;
+  isLoadingProgram: boolean;
   setSelectedOven: (oven: string) => void;
   setSelectedProgram: (program: number | null) => void;
   clearOven: () => void;
@@ -46,19 +47,22 @@ export const useOvenStore = create<OvenStateType>()(
     (set) => ({
       selectedOven: '',
       selectedProgram: null,
+      isLoadingProgram: false,
       setSelectedOven: async (oven: string) => {
-        set({ selectedOven: oven });
+        set({ selectedOven: oven, isLoadingProgram: true });
         
         // Automatically check for active program when oven is selected
         const { fetchActiveOvenProgram } = await import('../actions');
         const result = await fetchActiveOvenProgram(oven);
         
         if ('program' in result && result.program !== null) {
-          set({ selectedProgram: result.program });
+          set({ selectedProgram: result.program, isLoadingProgram: false });
+        } else {
+          set({ isLoadingProgram: false });
         }
       },
       setSelectedProgram: (program: number | null) => set({ selectedProgram: program }),
-      clearOven: () => set({ selectedOven: '', selectedProgram: null }),
+      clearOven: () => set({ selectedOven: '', selectedProgram: null, isLoadingProgram: false }),
       clearProgram: () => set({ selectedProgram: null }),
     }),
     { name: 'oven-application' },

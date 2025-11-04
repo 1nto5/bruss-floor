@@ -453,20 +453,20 @@ export async function fetchActiveOvenProgram(
 ): Promise<{ program: number | null } | { error: string }> {
   try {
     const processCollection = await dbc('oven_processes');
-    // Find running processes for this oven
-    const runningProcess = await processCollection.findOne({
+    // Find running or prepared processes for this oven
+    const activeProcess = await processCollection.findOne({
       oven,
-      status: 'running',
+      status: { $in: ['running', 'prepared'] },
     });
 
-    if (!runningProcess || !runningProcess.article) {
+    if (!activeProcess || !activeProcess.article) {
       return { program: null };
     }
 
     // Get the program for this article
     const processConfigCollection = await dbc('oven_process_configs');
     const processConfig = await processConfigCollection.findOne({
-      article: runningProcess.article,
+      article: activeProcess.article,
     });
 
     if (!processConfig) {

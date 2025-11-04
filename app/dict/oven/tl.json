@@ -131,7 +131,7 @@
   },
   "finishFaultDialog": {
     "title": "Tapusin ang sira ng oven",
-    "description": "Sigurado ka bang naayos na ang sira at handa na ang oven para sa operasyon?",
+    "description": "Sigurado ka bang handa na ang oven para sa operasyon?",
     "startTime": "Naiulat ang sira noong",
     "reportedBy": "Naiulat ng",
     "cancel": "Kanselahin",

@@ -131,7 +131,7 @@
   },
   "finishFaultDialog": {
     "title": "Finish oven fault",
-    "description": "Are you sure the fault has been resolved and the oven is ready for operation?",
+    "description": "Are you sure the oven is ready for operation?",
     "startTime": "Fault reported at",
     "reportedBy": "Reported by",
     "cancel": "Cancel",

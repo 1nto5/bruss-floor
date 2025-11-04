@@ -53,7 +53,7 @@ export const ReportFaultDialog = memo<ReportFaultDialogProps>(
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirm}
-              className='flex w-3/4 items-center justify-center gap-2 bg-red-600 hover:bg-red-700'
+              className='flex w-3/4 items-center justify-center gap-2 bg-destructive text-destructive-foreground hover:bg-destructive/90'
             >
               <AlertTriangle className='h-4 w-4' />
               {dict.reportFaultDialog.confirm}

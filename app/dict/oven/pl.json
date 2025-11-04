@@ -131,7 +131,7 @@
   },
   "finishFaultDialog": {
     "title": "Zakończ awarię pieca",
-    "description": "Czy na pewno awaria została naprawiona i piec jest gotowy do pracy?",
+    "description": "Czy na pewno piec jest gotowy do pracy?",
     "startTime": "Awaria zgłoszona o",
     "reportedBy": "Zgłoszone przez",
     "cancel": "Anuluj",

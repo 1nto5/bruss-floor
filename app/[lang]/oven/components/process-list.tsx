@@ -335,24 +335,21 @@ export default function ProcessList({ dict, lang }: ProcessListProps) {
     const result = await reportOvenFault(selectedOven, operators);
 
     if ('success' in result && result.success) {
-      playNok();
       await refetchFault();
       toast.success(dict.processList.toasts.faultReported);
       return true;
     }
 
     if ('error' in result && result.error) {
-      playNok();
       const errorMessage = translateError(result.error);
       toast.error(errorMessage);
       return false;
     }
 
-    playNok();
     console.error('Unexpected response format:', result);
     toast.error(dict.processList.toasts.contactIT);
     return false;
-  }, [selectedOven, operators, refetchFault, playNok, dict, translateError]);
+  }, [selectedOven, operators, refetchFault, dict, translateError]);
 
   const handleFinishFault = useCallback(() => {
     setFinishFaultDialogOpen(true);
@@ -364,24 +361,21 @@ export default function ProcessList({ dict, lang }: ProcessListProps) {
     const result = await finishOvenFault(activeFault.id, operators);
 
     if ('success' in result && result.success) {
-      playOvenOut();
       await refetchFault();
       toast.success(dict.processList.toasts.faultFinished);
       return true;
     }
 
     if ('error' in result && result.error) {
-      playNok();
       const errorMessage = translateError(result.error);
       toast.error(errorMessage);
       return false;
     }
 
-    playNok();
     console.error('Unexpected response format:', result);
     toast.error(dict.processList.toasts.contactIT);
     return false;
-  }, [activeFault, operators, refetchFault, playNok, playOvenOut, dict, translateError]);
+  }, [activeFault, operators, refetchFault, dict, translateError]);
 
   const operatorNames = useMemo(() => {
     return [operator1, operator2, operator3]
@@ -421,6 +415,7 @@ export default function ProcessList({ dict, lang }: ProcessListProps) {
               {activeFault ? (
                 <Button
                   onClick={handleFinishFault}
+                  variant='destructive'
                   className='w-1/3'
                   size='lg'
                 >
@@ -600,7 +595,6 @@ export default function ProcessList({ dict, lang }: ProcessListProps) {
         open={finishFaultDialogOpen}
         onOpenChange={setFinishFaultDialogOpen}
         onConfirm={handleConfirmFinishFault}
-        fault={activeFault}
         dict={dict}
       />
     </>

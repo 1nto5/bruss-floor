@@ -131,7 +131,7 @@
   },
   "finishFaultDialog": {
     "title": "Ofenstörung beenden",
-    "description": "Ist die Störung behoben und der Ofen betriebsbereit?",
+    "description": "Ist der Ofen betriebsbereit?",
     "startTime": "Störung gemeldet um",
     "reportedBy": "Gemeldet von",
     "cancel": "Abbrechen",

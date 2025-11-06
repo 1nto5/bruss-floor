@@ -439,6 +439,16 @@ export async function saveHydra(
       return { message: 'box not full' };
     }
 
+    if (!articleConfig.nonUniqueHydraBatch) {
+      const existingBatch = await scansCollection.findOne({
+        hydra_batch: qrBatch,
+      });
+
+      if (existingBatch) {
+        return { message: 'batch exists' };
+      }
+    }
+
     try {
       const updateResult = await scansCollection.updateMany(
       {
@@ -548,6 +558,14 @@ export async function savePallet(
 
     if (currentBoxesOnPallet.length !== articleConfig.boxesPerPallet) {
       return { message: 'pallet not full' };
+    }
+
+    const existingBatch = await scansCollection.findOne({
+      pallet_batch: qrBatch.toUpperCase(),
+    });
+
+    if (existingBatch) {
+      return { message: 'batch exists' };
     }
 
     try {

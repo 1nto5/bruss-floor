@@ -443,22 +443,6 @@ export async function saveHydra(
       return { message: 'box not full' };
     }
 
-    // TEMPORARY: Remove duplicate DMCs that already exist in pallet/warehouse
-    const currentBoxDmcs = await scansCollection
-      .find({
-        status: 'box',
-        workplace: articleConfig.workplace,
-        article: articleConfig.articleNumber,
-      })
-      .toArray();
-
-    const dmcList = currentBoxDmcs.map((doc) => doc.dmc);
-    await scansCollection.deleteMany({
-      dmc: { $in: dmcList },
-      workplace: articleConfig.workplace,
-      status: { $in: ['pallet', 'warehouse'] },
-    });
-
     if (!articleConfig.nonUniqueHydraBatch) {
       const existingBatch = await scansCollection.findOne({
         hydra_batch: qrBatch.toUpperCase(),
@@ -578,22 +562,6 @@ export async function savePallet(
     if (currentBoxesOnPallet.length !== articleConfig.boxesPerPallet) {
       return { message: 'pallet not full' };
     }
-
-    // TEMPORARY: Remove duplicate DMCs that already exist in warehouse
-    const currentPalletDmcs = await scansCollection
-      .find({
-        status: 'pallet',
-        workplace: articleConfig.workplace,
-        article: articleConfig.articleNumber,
-      })
-      .toArray();
-
-    const dmcList = currentPalletDmcs.map((doc) => doc.dmc);
-    await scansCollection.deleteMany({
-      dmc: { $in: dmcList },
-      workplace: articleConfig.workplace,
-      status: 'warehouse',
-    });
 
     const existingBatch = await scansCollection.findOne({
       pallet_batch: qrBatch.toUpperCase(),

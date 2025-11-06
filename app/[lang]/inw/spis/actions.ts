@@ -224,7 +224,10 @@ export async function fetchPosition(
     if (!positionOnCard) {
       return { message: 'no position' };
     }
-    return { success: positionOnCard };
+
+    // Remove _id from subdocument to prevent error code 66 on updates
+    const { _id, ...positionWithoutId } = positionOnCard;
+    return { success: positionWithoutId };
   } catch (error) {
     console.error(error);
     return { error: 'fetchPosition server action error' };

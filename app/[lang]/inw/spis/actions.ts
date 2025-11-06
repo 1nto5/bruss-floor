@@ -89,18 +89,26 @@ export async function createNewCard(
     }
 
     // Tworzenie nowej karty z najniższym wolnym numerem
-    const result = await coll.insertOne({
-      number: newCardNumber,
-      creators: persons,
-      warehouse: warehouse,
-      sector: sector,
-      time: new Date(),
-    });
+    try {
+      const result = await coll.insertOne({
+        number: newCardNumber,
+        creators: persons,
+        warehouse: warehouse,
+        sector: sector,
+        time: new Date(),
+      });
 
-    if (result.insertedId) {
-      return { success: true, cardNumber: newCardNumber };
+      if (result.insertedId) {
+        return { success: true, cardNumber: newCardNumber };
+      }
+      return { error: 'not created' };
+    } catch (dbError) {
+      if ((dbError as { code?: number }).code === 11000) {
+        return { error: 'card number exists' };
+      }
+      console.error('Database error:', dbError);
+      return { error: 'database error' };
     }
-    return { error: 'not created' };
   } catch (error) {
     console.error(error);
     return { error: 'createNewCard server action error' };

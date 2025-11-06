@@ -619,16 +619,6 @@ export async function reportOvenFault(
 
     const collection = await dbc('oven_fault_reports');
 
-    // Check if there's already an active fault for this oven
-    const activeFault = await collection.findOne({
-      oven,
-      status: 'active',
-    });
-
-    if (activeFault) {
-      return { error: 'active fault exists' };
-    }
-
     // Create new fault report
     const newFault = {
       oven,
@@ -639,12 +629,20 @@ export async function reportOvenFault(
       status: 'active' as const,
     };
 
-    const result = await collection.insertOne(newFault);
-    if (!result.insertedId) {
-      return { error: 'not created' };
-    }
+    try {
+      const result = await collection.insertOne(newFault);
+      if (!result.insertedId) {
+        return { error: 'not created' };
+      }
 
-    return { success: true, faultId: result.insertedId.toString() };
+      return { success: true, faultId: result.insertedId.toString() };
+    } catch (dbError) {
+      if ((dbError as { code?: number }).code === 11000) {
+        return { error: 'active fault exists' };
+      }
+      console.error('Database error:', dbError);
+      return { error: 'database error' };
+    }
   } catch (error) {
     console.error('reportOvenFault error:', error);
     return { error: 'fault report error' };

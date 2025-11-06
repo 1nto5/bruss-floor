@@ -255,18 +255,6 @@ export async function saveDmc(
 
     const scansCollection = await dbc('dmcheck_scans');
 
-    const existingDmc = await scansCollection.findOne(
-      {
-        dmc: validatedDmc,
-        workplace: articleConfig.workplace,
-      },
-      { sort: { time: -1 } }
-    );
-
-    if (existingDmc && !isReworkStatus(existingDmc.status)) {
-      return { message: 'dmc exists' };
-    }
-
     // BRI 40040 check in external pg DB
     if (articleConfig.articleNumber.includes('40040')) {
       try {
@@ -312,40 +300,48 @@ export async function saveDmc(
       }
     }
 
-    const insertResult = await scansCollection.insertOne({
-      status: 'box',
-      dmc: validatedDmc.toUpperCase(),
-      workplace: articleConfig.workplace,
-      article: articleConfig.articleNumber,
-      operator: operators, // Always save as array
-      time: new Date(),
-    });
+    try {
+      const insertResult = await scansCollection.insertOne({
+        status: 'box',
+        dmc: validatedDmc.toUpperCase(),
+        workplace: articleConfig.workplace,
+        article: articleConfig.articleNumber,
+        operator: operators, // Always save as array
+        time: new Date(),
+      });
 
-    if (insertResult) {
-      // EOL810/EOL488 lighting the lamp
-      if (
-        articleConfig.workplace === 'eol810' ||
-        articleConfig.workplace === 'eol488'
-      ) {
-        const variant = articleConfig.workplace === 'eol810' ? '10' : '20';
-        await fetch(
-          `http://10.27.90.4:8090/api/turn-on-ok-indicator/${variant}`
-        );
-      }
-      if (smartStatus === 'unknown') {
+      if (insertResult) {
+        // EOL810/EOL488 lighting the lamp
+        if (
+          articleConfig.workplace === 'eol810' ||
+          articleConfig.workplace === 'eol488'
+        ) {
+          const variant = articleConfig.workplace === 'eol810' ? '10' : '20';
+          await fetch(
+            `http://10.27.90.4:8090/api/turn-on-ok-indicator/${variant}`
+          );
+        }
+        if (smartStatus === 'unknown') {
+          return {
+            message: 'dmc saved smart unknown',
+            dmc: validatedDmc,
+            time: new Date().toISOString(),
+          };
+        }
         return {
-          message: 'dmc saved smart unknown',
+          message: 'dmc saved',
           dmc: validatedDmc,
           time: new Date().toISOString(),
         };
       }
-      return {
-        message: 'dmc saved',
-        dmc: validatedDmc,
-        time: new Date().toISOString(),
-      };
+      return { message: 'save error' };
+    } catch (dbError) {
+      if ((dbError as { code?: number }).code === 11000) {
+        return { message: 'dmc exists' };
+      }
+      console.error('Database error:', dbError);
+      return { message: 'database error' };
     }
-    return { message: 'save error' };
   } catch (error) {
     console.error(error);
     return { message: 'save error' };
@@ -443,36 +439,34 @@ export async function saveHydra(
       return { message: 'box not full' };
     }
 
-    if (!articleConfig.nonUniqueHydraBatch) {
-      const existingBatch = await scansCollection.findOne({
-        hydra_batch: qrBatch,
-      });
-
-      if (existingBatch) {
-        return { message: 'batch exists' };
-      }
-    }
-
-    const updateResult = await scansCollection.updateMany(
+    try {
+      const updateResult = await scansCollection.updateMany(
       {
         status: 'box',
         workplace: articleConfig.workplace,
         article: articleConfig.articleNumber,
       },
-      {
-        $set: {
-          status: 'pallet',
-          hydra_batch: qrBatch.toUpperCase(),
-          hydra_operator: operators, // Separate field for hydra operator, don't overwrite original operator
-          hydra_time: new Date(),
-        },
-      }
-    );
+        {
+          $set: {
+            status: 'pallet',
+            hydra_batch: qrBatch.toUpperCase(),
+            hydra_operator: operators, // Separate field for hydra operator, don't overwrite original operator
+            hydra_time: new Date(),
+          },
+        }
+      );
 
-    if (updateResult.modifiedCount > 0) {
-      return { message: 'batch saved' };
+      if (updateResult.modifiedCount > 0) {
+        return { message: 'batch saved' };
+      }
+      return { message: 'save error' };
+    } catch (dbError) {
+      if ((dbError as { code?: number }).code === 11000) {
+        return { message: 'batch exists' };
+      }
+      console.error('Database error:', dbError);
+      return { message: 'database error' };
     }
-    return { message: 'save error' };
   } catch (error) {
     console.error(error);
     return { message: 'save error' };
@@ -556,34 +550,34 @@ export async function savePallet(
       return { message: 'pallet not full' };
     }
 
-    const existingBatch = await scansCollection.findOne({
-      pallet_batch: qrBatch.toUpperCase(),
-    });
-
-    if (existingBatch) {
-      return { message: 'batch exists' };
-    }
-
-    const updateResult = await scansCollection.updateMany(
+    try {
+      const updateResult = await scansCollection.updateMany(
       {
         status: 'pallet',
         workplace: articleConfig.workplace,
         article: articleConfig.articleNumber,
       },
-      {
-        $set: {
-          status: 'warehouse',
-          pallet_batch: qrBatch.toUpperCase(),
-          pallet_time: new Date(),
-          pallet_operator: operators, // Always save as array
-        },
-      }
-    );
+        {
+          $set: {
+            status: 'warehouse',
+            pallet_batch: qrBatch.toUpperCase(),
+            pallet_time: new Date(),
+            pallet_operator: operators, // Always save as array
+          },
+        }
+      );
 
-    if (updateResult.modifiedCount > 0) {
-      return { message: 'batch saved' };
+      if (updateResult.modifiedCount > 0) {
+        return { message: 'batch saved' };
+      }
+      return { message: 'save error' };
+    } catch (dbError) {
+      if ((dbError as { code?: number }).code === 11000) {
+        return { message: 'batch exists' };
+      }
+      console.error('Database error:', dbError);
+      return { message: 'database error' };
     }
-    return { message: 'save error' };
   } catch (error) {
     console.error(error);
     return { message: 'save error' };
@@ -673,33 +667,41 @@ export async function saveDmcRework(
       }
     }
 
-    const insertResult = await scansCollection.insertOne({
-      status: 'box',
-      dmc: validatedDmc.toUpperCase(),
-      workplace: articleConfig.workplace,
-      article: articleConfig.articleNumber,
-      operator: operators,
-      time: new Date(),
-    });
+    try {
+      const insertResult = await scansCollection.insertOne({
+        status: 'box',
+        dmc: validatedDmc.toUpperCase(),
+        workplace: articleConfig.workplace,
+        article: articleConfig.articleNumber,
+        operator: operators,
+        time: new Date(),
+      });
 
-    if (insertResult) {
-      // EOL810/EOL488 lighting the lamp
-      if (
-        articleConfig.workplace === 'eol810' ||
-        articleConfig.workplace === 'eol488'
-      ) {
-        const variant = articleConfig.workplace === 'eol810' ? '10' : '20';
-        await fetch(
-          `http://10.27.90.4:8090/api/turn-on-ok-indicator/${variant}`
-        );
+      if (insertResult) {
+        // EOL810/EOL488 lighting the lamp
+        if (
+          articleConfig.workplace === 'eol810' ||
+          articleConfig.workplace === 'eol488'
+        ) {
+          const variant = articleConfig.workplace === 'eol810' ? '10' : '20';
+          await fetch(
+            `http://10.27.90.4:8090/api/turn-on-ok-indicator/${variant}`
+          );
+        }
+        return {
+          message: 'rework dmc saved',
+          dmc: validatedDmc,
+          time: new Date().toISOString(),
+        };
       }
-      return {
-        message: 'rework dmc saved',
-        dmc: validatedDmc,
-        time: new Date().toISOString(),
-      };
+      return { message: 'save error' };
+    } catch (dbError) {
+      if ((dbError as { code?: number }).code === 11000) {
+        return { message: 'dmc exists' };
+      }
+      console.error('Database error:', dbError);
+      return { message: 'database error' };
     }
-    return { message: 'save error' };
   } catch (error) {
     console.error(error);
     return { message: 'save error' };

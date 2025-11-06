@@ -168,12 +168,6 @@ export async function saveHydraBatch(
 
     const collection = await dbc('eol136153_scans');
 
-    // Check if batch already exists
-    const existingData = await collection.findOne({ hydra_batch: qrBatch });
-    if (existingData) {
-      return { status: 'exists' };
-    }
-
     // Check if pallet is full
     const boxesOnPallet = await collection.countDocuments({
       status: 'pallet',
@@ -186,21 +180,29 @@ export async function saveHydraBatch(
     }
 
     // Insert the scan
-    await collection.insertOne({
-      status: 'pallet',
-      workplace: 'eol136153',
-      type: articleConfig.type,
-      article: qrArticle,
-      time: new Date(),
-      hydra_batch: qrBatch,
-      hydra_operator: operators,
-    });
+    try {
+      await collection.insertOne({
+        status: 'pallet',
+        workplace: 'eol136153',
+        type: articleConfig.type,
+        article: qrArticle,
+        time: new Date(),
+        hydra_batch: qrBatch,
+        hydra_operator: operators,
+      });
 
-    return {
-      status: 'saved',
-      article: qrArticle,
-      batch: qrBatch,
-    };
+      return {
+        status: 'saved',
+        article: qrArticle,
+        batch: qrBatch,
+      };
+    } catch (dbError) {
+      if ((dbError as { code?: number }).code === 11000) {
+        return { status: 'exists' };
+      }
+      console.error('Database error:', dbError);
+      return { status: 'error' };
+    }
   } catch (error) {
     console.error(error);
     return { status: 'error' };

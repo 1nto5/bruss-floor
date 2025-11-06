@@ -445,7 +445,7 @@ export async function saveHydra(
 
     if (!articleConfig.nonUniqueHydraBatch) {
       const existingBatch = await scansCollection.findOne({
-        hydra_batch: qrBatch,
+        hydra_batch: qrBatch.toUpperCase(),
       });
 
       if (existingBatch) {

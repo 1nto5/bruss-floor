@@ -1,5 +1,4 @@
 import '@/app/globals.css';
-import { Toaster } from '@/components/ui/sonner';
 import { i18n } from '@/lib/config/i18n';
 import { ThemeProvider } from '@/lib/providers/theme-provider';
 import { Metadata } from 'next';
@@ -19,7 +18,6 @@ export default async function RootLayout(props: { children: React.ReactNode }) {
       <body className="bg-background min-h-screen font-sans antialiased">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           {children}
-          <Toaster position="bottom-center" richColors />
         </ThemeProvider>
       </body>
     </html>

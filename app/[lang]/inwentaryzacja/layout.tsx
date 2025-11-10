@@ -3,6 +3,7 @@ import '@/app/globals.css';
 import Footer from '@/components/footer';
 
 // import { getDictionary } from '@/lib/dict';
+import { Toaster } from '@/components/ui/sonner';
 import { ThemeProvider } from '@/lib/providers/theme-provider';
 import { Metadata } from 'next';
 import Header from './components/header';
@@ -29,11 +30,11 @@ export default async function InwSpisLayout(props: {
       <QueryProvider>
         <div className="flex min-h-screen flex-col space-y-1">
           <Header />
-          <main className="mx-auto max-w-7xl flex-1">
+          <main className="mx-auto max-w-7xl flex-1 pb-24 sm:pb-8">
             <div className="flex justify-center">{children}</div>
           </main>
-          <Footer />
         </div>
+        <Toaster position="top-center" richColors />
       </QueryProvider>
     </ThemeProvider>
   );

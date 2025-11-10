@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { login } from '../actions';
@@ -20,7 +20,6 @@ import {
 import {
   Form,
   FormControl,
-  // FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -28,8 +27,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
-import { Loader2 } from 'lucide-react';
-import { useEffect } from 'react';
+import { Loader2, LogIn } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function Login() {
@@ -68,7 +66,6 @@ export default function Login() {
   }, [personalNumber3Form]);
 
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
-    // setIsDraft(false);
     setIsPending(true);
     try {
       const res = await login(data);
@@ -119,7 +116,6 @@ export default function Login() {
         setPersonalNumber3(data.personalNumber3 || '');
       }
     } catch (error) {
-      console.error('onSubmit', error);
       toast.error('Skontaktuj się z IT!');
     } finally {
       setIsPending(false);
@@ -127,7 +123,7 @@ export default function Login() {
   };
 
   return (
-    <Card className='sm:w-[600px]'>
+    <Card className='sm:w-[600px] mb-8 sm:mb-0'>
       <CardHeader>
         <CardTitle>Logowanie</CardTitle>
         <CardDescription>
@@ -148,9 +144,6 @@ export default function Login() {
                   <FormControl>
                     <Input autoComplete='off' placeholder='' {...field} />
                   </FormControl>
-                  {/* <FormDescription>
-                        Wprowadź służbowy adres personalNumber.
-                      </FormDescription> */}
                   <FormMessage />
                 </FormItem>
               )}
@@ -164,9 +157,6 @@ export default function Login() {
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
-                  {/* <FormDescription>
-                        Wprowadź służbowy adres personalNumber.
-                      </FormDescription> */}
                   <FormMessage />
                 </FormItem>
               )}
@@ -195,9 +185,6 @@ export default function Login() {
                       <FormControl>
                         <Input autoComplete='off' placeholder='' {...field} />
                       </FormControl>
-                      {/* <FormDescription>
-                        Wprowadź służbowy adres personalNumber.
-                      </FormDescription> */}
                       <FormMessage />
                     </FormItem>
                   )}
@@ -212,9 +199,6 @@ export default function Login() {
                       <FormControl>
                         <Input {...field} />
                       </FormControl>
-                      {/* <FormDescription>
-                        Wprowadź służbowy adres personalNumber.
-                      </FormDescription> */}
                       <FormMessage />
                     </FormItem>
                   )}
@@ -245,9 +229,6 @@ export default function Login() {
                       <FormControl>
                         <Input autoComplete='off' placeholder='' {...field} />
                       </FormControl>
-                      {/* <FormDescription>
-                        Wprowadź służbowy adres personalNumber.
-                      </FormDescription> */}
                       <FormMessage />
                     </FormItem>
                   )}
@@ -262,9 +243,6 @@ export default function Login() {
                       <FormControl>
                         <Input {...field} />
                       </FormControl>
-                      {/* <FormDescription>
-                        Wprowadź służbowy adres personalNumber.
-                      </FormDescription> */}
                       <FormMessage />
                     </FormItem>
                   )}
@@ -273,12 +251,14 @@ export default function Login() {
             )}
           </CardContent>
 
-          <CardFooter className='flex justify-end'>
-            <Button type='submit' disabled={isPending}>
-              {isPending && <Loader2 className='animate-spin' />}
-              Zaloguj
-            </Button>
-          </CardFooter>
+          <div className='fixed bottom-0 left-0 right-0 z-50 bg-background border-t pt-4 pb-4 sm:static sm:border-t-0 sm:pt-0 sm:pb-0'>
+            <CardFooter className='flex max-w-[600px] mx-auto py-0 sm:max-w-none sm:py-6'>
+              <Button type='submit' disabled={isPending} className='w-full'>
+                {isPending ? <Loader2 className='animate-spin' /> : <LogIn />}
+                Zaloguj
+              </Button>
+            </CardFooter>
+          </div>
         </form>
       </Form>
     </Card>

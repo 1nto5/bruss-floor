@@ -36,7 +36,7 @@ export default function Header() {
     type: 'card' | 'position' | 'logout',
     title: string,
     description: string,
-    action: () => void,
+    action: () => void
   ) => {
     setPendingAction({ type, title, description, action });
     setAlertOpen(true);
@@ -55,12 +55,12 @@ export default function Header() {
       <header
         className={`bg-background sticky top-0 z-50 w-full border-b px-2 py-4 transition-all`}
       >
-        <div className='relative mx-auto flex h-4 w-full max-w-7xl items-center justify-between'>
-          <div className='flex items-center'>
-            <span className='font-mono font-semibold'>inw spis</span>
+        <div className="relative mx-auto flex h-4 w-full max-w-7xl items-center justify-between">
+          <div className="flex items-center">
+            <span className="font-mono font-semibold">inwentaryzacja</span>
           </div>
 
-          <div className='flex items-center space-x-1'>
+          <div className="flex items-center space-x-1">
             {card !== 0 && (
               <Button
                 onClick={() =>
@@ -71,13 +71,13 @@ export default function Header() {
                     () => {
                       setCard(0, '', '');
                       setPosition(0);
-                    },
+                    }
                   )
                 }
-                variant='ghost'
-                size='icon'
+                variant="ghost"
+                size="icon"
               >
-                <StickyNote className='h-[1.2rem] w-[1.2rem]' />
+                <StickyNote className="h-[1.2rem] w-[1.2rem]" />
               </Button>
             )}
             {position !== 0 && (
@@ -87,13 +87,13 @@ export default function Header() {
                     'position',
                     'Zmiana pozycji',
                     'Czy na pewno chcesz zmienić pozycję?',
-                    () => setPosition(0),
+                    () => setPosition(0)
                   )
                 }
-                variant='ghost'
-                size='icon'
+                variant="ghost"
+                size="icon"
               >
-                <SquarePen className='h-[1.2rem] w-[1.2rem]' />
+                <SquarePen className="h-[1.2rem] w-[1.2rem]" />
               </Button>
             )}
             {personalNumber1 && (
@@ -103,13 +103,13 @@ export default function Header() {
                     'logout',
                     'Wylogowanie',
                     'Czy na pewno chcesz się wylogować?',
-                    logout,
+                    logout
                   )
                 }
-                variant='ghost'
-                size='icon'
+                variant="ghost"
+                size="icon"
               >
-                <UserPen className='h-[1.2rem] w-[1.2rem]' />
+                <UserPen className="h-[1.2rem] w-[1.2rem]" />
               </Button>
             )}
             <ThemeModeToggle />
@@ -125,16 +125,13 @@ export default function Header() {
               {pendingAction?.description}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className='flex w-full flex-row gap-2'>
-            <AlertDialogCancel className='flex w-1/4 items-center justify-center gap-2'>
-              <X className='h-4 w-4' />
+          <AlertDialogFooter>
+            <AlertDialogCancel>
+              <X className="h-4 w-4" />
               Anuluj
             </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={executeAction}
-              className='flex w-3/4 items-center justify-center gap-2'
-            >
-              <Check className='h-4 w-4' />
+            <AlertDialogAction onClick={executeAction}>
+              <Check className="h-4 w-4" />
               Kontynuuj
             </AlertDialogAction>
           </AlertDialogFooter>

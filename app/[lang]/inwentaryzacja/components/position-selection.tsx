@@ -9,7 +9,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
   TableBody,
@@ -19,6 +18,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import clsx from 'clsx';
+import { Plus } from 'lucide-react';
 import { useEffect } from 'react';
 import { PositionType } from '../lib/types';
 import { useGetCardPositions } from '../data/get-card-positions';
@@ -28,9 +28,9 @@ import {
   usePositionStore,
 } from '../lib/stores';
 import ErrorAlert from './error-alert';
+import TableSkeleton from './table-skeleton';
 
 export default function PositionSelection() {
-  // const [isPending, setIsPending] = useState(false);
   const { personalNumber1, personalNumber2, personalNumber3 } =
     usePersonalNumberStore();
   const { card } = useCardStore();
@@ -51,12 +51,11 @@ export default function PositionSelection() {
   }, [data?.message, isSuccess, setPosition]);
 
   if (data?.error || error) {
-    console.error(data?.error || error);
     return <ErrorAlert refetch={refetch} isFetching={isFetching} />;
   }
 
   return (
-    <Card className='sm:w-[600px]'>
+    <Card className='sm:w-[600px] mb-8 sm:mb-0'>
       <CardHeader>
         <CardTitle className={clsx('', isFetching && 'animate-pulse')}>
           Wybór pozycji
@@ -66,7 +65,6 @@ export default function PositionSelection() {
       <CardContent className='grid w-full items-center gap-4'>
         {data?.success && (
           <Table>
-            {/* <TableCaption>A list of instruments.</TableCaption> */}
             <TableHeader>
               <TableRow>
                 <TableHead>Numer</TableHead>
@@ -91,53 +89,31 @@ export default function PositionSelection() {
                   <TableCell>{position.articleName}</TableCell>
                   <TableCell>{`${position.quantity} ${position.unit}`}</TableCell>
                   <TableCell>{position.wip ? 'Tak' : 'Nie'}</TableCell>
-                  {/* <TableCell>{position.creators.join(', ')}</TableCell> */}
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         )}
         {isFetching && !data?.success && (
-          <Skeleton>
-            <Table>
-              {/* <TableCaption>A list of instruments.</TableCaption> */}
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Numer</TableHead>
-                  <TableHead>Identyfikator</TableHead>
-                  <TableHead>Numer art.</TableHead>
-                  <TableHead>Nazwa</TableHead>
-                  <TableHead>Ilość</TableHead>
-                  <TableHead>WIP</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {Array.from({ length: 5 }).map((_, index) => (
-                  <TableRow key={index}>
-                    <TableCell></TableCell>
-                    <TableCell></TableCell>
-                    <TableCell></TableCell>
-                    <TableCell></TableCell>
-                    <TableCell></TableCell>
-                    <TableCell></TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </Skeleton>
+          <TableSkeleton
+            headers={['Numer', 'Identyfikator', 'Numer art.', 'Nazwa', 'Ilość', 'WIP']}
+          />
         )}
       </CardContent>
-      {data?.success && (
-        <CardFooter className='flex justify-end'>
+      <div className='fixed bottom-0 left-0 right-0 z-50 bg-background border-t pt-4 pb-4 sm:static sm:border-t-0 sm:pt-0 sm:pb-0'>
+        <CardFooter className='flex max-w-[600px] mx-auto py-0 sm:max-w-none sm:py-6'>
           <Button
             onClick={() => {
               setPosition(data.success.length + 1);
             }}
+            disabled={isFetching || !data?.success}
+            className='w-full'
           >
+            <Plus />
             Nowa pozycja
           </Button>
         </CardFooter>
-      )}
+      </div>
     </Card>
   );
 }

@@ -32,7 +32,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Loader2, RefreshCcw } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Eraser, Loader2, Save } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -54,19 +54,19 @@ export default function PositionEdit() {
   const { setPosition, position } = usePositionStore();
 
   const persons = [personalNumber1, personalNumber2, personalNumber3].filter(
-    (person) => person,
+    (person) => person
   );
   const { data, error, isSuccess, refetch, isFetching } = useGetPosition(
     persons,
     card,
-    position,
+    position
   );
 
   const [isPending, setIsPending] = useState(false);
   const [isPendingFindArticle, setIsPendingFindArticle] = useState(false);
   const [isPendingFindBin, setIsPendingFindBin] = useState(false);
   const [foundArticles, setFoundArticles] = useState<{ [key: string]: any }[]>(
-    [],
+    []
   );
   const [foundBins, setFoundBins] = useState<{ [key: string]: any }[]>([]);
   const [findArticleMessage, setFindArticleMessage] = useState('');
@@ -118,7 +118,7 @@ export default function PositionEdit() {
               setFoundBins(binRes.success);
               // Set the selected bin to the matching bin object
               const matchingBin = binRes.success.find(
-                (bin) => bin.value === data.success.bin,
+                (bin) => bin.value === data.success.bin
               );
               setSelectedBin(matchingBin || binRes.success[0]);
               setFindBinMessage('success');
@@ -138,11 +138,8 @@ export default function PositionEdit() {
     form.setValue('findArticle', '');
     form.setValue('quantity', '');
     form.setValue('wip', false);
-    // form.setValue('unit', '');
     form.setValue('findBin', '');
-    // form.setValue('deliveryDate', undefined);
     refetch();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [position, refetch, card]);
 
   const handleFindArticle = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -162,13 +159,12 @@ export default function PositionEdit() {
             break;
           case 'too many articles':
             setFindArticleMessage(
-              'Sprecyzuj wyszukiwanie - znaleziono za dużo artykułów!',
+              'Sprecyzuj wyszukiwanie - znaleziono za dużo artykułów!'
             );
             setFoundArticles([]);
             setSelectedArticle(undefined);
             break;
           default:
-            console.error('handleFindArticle', res.error);
             toast.error('Skontaktuj się z IT!');
         }
         return;
@@ -176,7 +172,6 @@ export default function PositionEdit() {
       setFindArticleMessage('success');
       setFoundArticles(res.success);
     } catch (error) {
-      console.error('handleFindArticle', error);
       toast.error('Skontaktuj się z IT!');
     } finally {
       setIsPendingFindArticle(false);
@@ -200,7 +195,6 @@ export default function PositionEdit() {
             setSelectedBin(undefined);
             break;
           default:
-            console.error('handleFindBin', res.error);
             toast.error('Skontaktuj się z IT!');
         }
         return;
@@ -208,7 +202,6 @@ export default function PositionEdit() {
       setFindBinMessage('success');
       setFoundBins(res.success);
     } catch (error) {
-      console.error('handleFindBin', error);
       toast.error('Skontaktuj się z IT!');
     } finally {
       setIsPendingFindBin(false);
@@ -252,7 +245,7 @@ export default function PositionEdit() {
         selectedArticle.unit,
         data.wip,
         selectedBin && selectedBin.value,
-        data.deliveryDate,
+        data.deliveryDate
       );
       if ('error' in res) {
         if (res.error === 'wrong quantity') {
@@ -261,7 +254,6 @@ export default function PositionEdit() {
           });
           return;
         }
-        console.error('onSubmit', res.error);
         toast.error('Skontaktuj się z IT!');
         return;
       }
@@ -270,7 +262,6 @@ export default function PositionEdit() {
         refetch();
       }
     } catch (error) {
-      console.error('onSubmit', error);
       toast.error('Skontaktuj się z IT!');
     } finally {
       setIsPending(false);
@@ -278,33 +269,11 @@ export default function PositionEdit() {
   };
 
   if (data?.error || error) {
-    console.error(data?.error || error);
     return <ErrorAlert refetch={refetch} isFetching={isFetching} />;
   }
 
-  if (isFetching) {
-    return (
-      <Card className='sm:w-[600px]'>
-        <CardHeader>
-          <CardTitle>Pozycja nr: {position}</CardTitle>
-          <CardDescription>
-            karta nr: {card}, magazyn: {warehouse}, sektor: {sector},
-            zalogowani: {persons.join(', ')}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className='g-full grid w-full items-center gap-4'>
-          <Skeleton className='h-28'></Skeleton>
-          <Skeleton className='h-28'></Skeleton>
-          <Skeleton className='h-12'></Skeleton>
-          <Skeleton className='h-20'></Skeleton>
-          <Skeleton className='h-12'></Skeleton>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
-    <Card className='sm:w-[600px]'>
+    <Card className="sm:w-[600px] mb-8 sm:mb-0">
       <CardHeader>
         <CardTitle>Pozycja nr: {position}</CardTitle>
         <CardDescription>
@@ -316,21 +285,21 @@ export default function PositionEdit() {
       </CardHeader>
       {!isFetching && (
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-6'>
-            <CardContent className='grid w-full items-center gap-4'>
+          <form onSubmit={form.handleSubmit(onSubmit)}>
+            <CardContent className="grid w-full items-center gap-4">
               {identifier && (
-                <FormItem className='rounded-lg border p-4'>
+                <FormItem className="rounded-lg border p-4">
                   <FormLabel>Identyfikator</FormLabel>
-                  <FormMessage className='text-2xl'>{identifier}</FormMessage>
+                  <FormMessage className="text-2xl">{identifier}</FormMessage>
                 </FormItem>
               )}
               <FormField
                 control={form.control}
-                name='findArticle'
+                name="findArticle"
                 render={({ field }) => (
-                  <FormItem className='rounded-lg border p-4'>
+                  <FormItem className="rounded-lg border p-4">
                     <FormLabel>Artykuł</FormLabel>
-                    <div className='flex items-center space-x-2'>
+                    <div className="flex items-center space-x-2">
                       <FormControl>
                         <Input
                           {...field}
@@ -359,32 +328,31 @@ export default function PositionEdit() {
               {foundArticles[0] && !isPendingFindArticle && (
                 <FormField
                   control={form.control}
-                  name='article'
+                  name="article"
                   render={({ field }) => (
-                    <FormItem className='space-y-3 rounded-lg border p-4'>
+                    <FormItem className="space-y-3 rounded-lg border p-4">
                       <FormControl>
                         <RadioGroup
                           disabled={data?.success?.approver}
                           onValueChange={(value) => {
                             field.onChange(value);
                             const selectedArticle = foundArticles.find(
-                              (article) => article.number === value,
+                              (article) => article.number === value
                             );
                             setSelectedArticle(selectedArticle);
                           }}
-                          // defaultValue={field.value}
                           value={field.value}
-                          className='flex flex-col space-y-1'
+                          className="flex flex-col space-y-1"
                         >
                           {foundArticles.map((article) => (
                             <FormItem
                               key={article.number}
-                              className='flex items-center space-y-0 space-x-3'
+                              className="flex items-center space-y-0 space-x-3"
                             >
                               <FormControl>
                                 <RadioGroupItem value={article.number} />
                               </FormControl>
-                              <FormLabel className='font-normal'>
+                              <FormLabel className="font-normal">
                                 {article.number} - {article.name}
                               </FormLabel>
                             </FormItem>
@@ -392,7 +360,7 @@ export default function PositionEdit() {
                         </RadioGroup>
                       </FormControl>
                       {showPlusOneMessage && (
-                        <FormMessage className=''>
+                        <FormMessage className="">
                           Artykuł zapisany z poprzedniej pozycji - zweryfikuj
                           jego poprawność!
                         </FormMessage>
@@ -406,34 +374,11 @@ export default function PositionEdit() {
               {selectedArticle?.converter && (
                 <FormField
                   control={form.control}
-                  name='unit'
+                  name="unit"
                   render={({ field }) => (
-                    <FormItem className='rounded-lg border p-4'>
+                    <FormItem className="rounded-lg border p-4">
                       <FormLabel>Wybierz jednostkę</FormLabel>
 
-                      {/* <RadioGroup
-                        value={field.value}
-                        onValueChange={(value) => {
-                          field.onChange(value);
-                          if (value === 'kg') {
-                            form.setValue(
-                              'quantity',
-                              (
-                                Number(form.getValues('quantity')) *
-                                selectedArticle.converter
-                              ).toString(),
-                            );
-                          } else if (value === 'st') {
-                            form.setValue(
-                              'quantity',
-                              (
-                                Number(form.getValues('quantity')) /
-                                selectedArticle.converter
-                              ).toString(),
-                            );
-                          }
-                        }}
-                      > */}
                       <RadioGroup
                         value={field.value}
                         onValueChange={(value) => {
@@ -447,26 +392,26 @@ export default function PositionEdit() {
                                 'quantity',
                                 (
                                   numericQuantity * selectedArticle.converter
-                                ).toString(),
+                                ).toString()
                               );
                             } else if (value === 'st') {
                               form.setValue(
                                 'quantity',
                                 (
                                   numericQuantity / selectedArticle.converter
-                                ).toString(),
+                                ).toString()
                               );
                             }
                           }
                         }}
                       >
-                        <div className='flex items-center space-x-2'>
-                          <RadioGroupItem value='kg' id='r2' />
-                          <Label htmlFor='kg'>kg</Label>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="kg" id="r2" />
+                          <Label htmlFor="kg">kg</Label>
                         </div>
-                        <div className='flex items-center space-x-2'>
-                          <RadioGroupItem value='st' id='r3' />
-                          <Label htmlFor='st'>st</Label>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="st" id="r3" />
+                          <Label htmlFor="st">st</Label>
                         </div>
                       </RadioGroup>
                     </FormItem>
@@ -477,9 +422,9 @@ export default function PositionEdit() {
               {selectedArticle && (
                 <FormField
                   control={form.control}
-                  name='quantity'
+                  name="quantity"
                   render={({ field }) => (
-                    <FormItem className='rounded-lg border p-4'>
+                    <FormItem className="rounded-lg border p-4">
                       <FormLabel>
                         Ilość wyrażona w{' '}
                         {selectedArticle.converter
@@ -492,13 +437,13 @@ export default function PositionEdit() {
                             {`10 st = ${selectedArticle.converter} kg`}
                           </FormDescription>
                         )}
-                      <div className='flex items-center space-x-2'>
+                      <div className="flex items-center space-x-2">
                         <FormControl>
                           <Input
-                            className=''
+                            className=""
                             disabled={data?.success?.approver}
                             placeholder={`podaj ilość w ${form.getValues('unit') || selectedArticle.unit}`}
-                            inputMode='decimal'
+                            inputMode="decimal"
                             {...field}
                             onChange={(e) => {
                               // Handle comma to period conversion locally for display
@@ -509,7 +454,7 @@ export default function PositionEdit() {
                         </FormControl>
                       </div>
                       {isPendingFindArticle && (
-                        <Loader2 className='h-4 w-4 animate-spin' />
+                        <Loader2 className="h-4 w-4 animate-spin" />
                       )}
                       {selectedArticle.converter &&
                         form.getValues('unit') === 'kg' &&
@@ -518,14 +463,13 @@ export default function PositionEdit() {
                             ={' '}
                             {Math.floor(
                               Number(
-                                form.getValues('quantity').replace(/,/g, '.'),
-                              ) / selectedArticle.converter || 0,
+                                form.getValues('quantity').replace(/,/g, '.')
+                              ) / selectedArticle.converter || 0
                             )}{' '}
                             st
                           </FormDescription>
                         )}
                       <FormMessage />
-                      {/* FIX: double FormMessage */}
                     </FormItem>
                   )}
                 />
@@ -534,11 +478,11 @@ export default function PositionEdit() {
               {selectedArticle && sector != 'S900' && (
                 <FormField
                   control={form.control}
-                  name='wip'
+                  name="wip"
                   render={({ field }) => (
-                    <FormItem className='flex flex-row items-center justify-between rounded-lg border p-4'>
-                      <div className='space-y-0.5'>
-                        <FormLabel className='text-base'>WIP</FormLabel>
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-base">WIP</FormLabel>
                       </div>
                       <FormControl>
                         <Switch
@@ -553,25 +497,25 @@ export default function PositionEdit() {
               )}
 
               {selectedArticle && (
-                <Accordion type='single' collapsible>
-                  <AccordionItem value='storage-delivery'>
+                <Accordion type="single" collapsible>
+                  <AccordionItem value="storage-delivery">
                     <AccordionTrigger>
                       Storage Bin i Data Dostawy
                     </AccordionTrigger>
 
                     <AccordionContent>
-                      <div className='space-y-4 pt-2'>
+                      <div className="space-y-4 pt-2">
                         <FormField
                           control={form.control}
-                          name='findBin'
+                          name="findBin"
                           render={({ field }) => (
-                            <FormItem className='rounded-lg border p-4'>
+                            <FormItem className="rounded-lg border p-4">
                               <FormLabel>Storage Bin</FormLabel>
 
-                              <div className='flex items-center space-x-2'>
+                              <div className="flex items-center space-x-2">
                                 <FormControl>
                                   <Input
-                                    className=''
+                                    className=""
                                     placeholder={'wpisz aby wyszukać...'}
                                     value={field.value || ''}
                                     onChange={(e) => {
@@ -596,32 +540,32 @@ export default function PositionEdit() {
                         {foundBins[0] && !isPendingFindBin && (
                           <FormField
                             control={form.control}
-                            name='bin'
+                            name="bin"
                             render={({ field }) => (
-                              <FormItem className='space-y-3 rounded-lg border p-4'>
+                              <FormItem className="space-y-3 rounded-lg border p-4">
                                 <FormControl>
                                   <RadioGroup
                                     disabled={data?.success?.approver}
                                     onValueChange={(value) => {
                                       field.onChange(value);
                                       const selectedBin = foundBins.find(
-                                        (bin) => bin.value === value,
+                                        (bin) => bin.value === value
                                       );
                                       setFindBinMessage('success');
                                       setSelectedBin(selectedBin);
                                     }}
                                     value={field.value}
-                                    className='flex flex-col space-y-1'
+                                    className="flex flex-col space-y-1"
                                   >
                                     {foundBins.map((bin) => (
                                       <FormItem
                                         key={bin.value}
-                                        className='flex items-center space-y-0 space-x-3'
+                                        className="flex items-center space-y-0 space-x-3"
                                       >
                                         <FormControl>
                                           <RadioGroupItem value={bin.value} />
                                         </FormControl>
-                                        <FormLabel className='font-normal'>
+                                        <FormLabel className="font-normal">
                                           {bin.label}
                                         </FormLabel>
                                       </FormItem>
@@ -636,7 +580,7 @@ export default function PositionEdit() {
 
                         <FormField
                           control={form.control}
-                          name='deliveryDate'
+                          name="deliveryDate"
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Data dostawy</FormLabel>
@@ -653,7 +597,7 @@ export default function PositionEdit() {
                                       onChange={(x) =>
                                         !open && field.onChange(x)
                                       }
-                                      format='dd/MM/yyyy'
+                                      format="dd/MM/yyyy"
                                       disabled={open}
                                       onCalendarClick={() => setOpen(!open)}
                                     />
@@ -670,109 +614,77 @@ export default function PositionEdit() {
                 </Accordion>
               )}
             </CardContent>
-
-            <CardFooter className='flex justify-between gap-2'>
-              {position !== 1 ? (
-                <Button
-                  onClick={() => {
-                    setPosition(position - 1);
-                    setShowPlusOneMessage(false);
-                  }}
-                  type={'button'}
-                  variant={'outline'}
-                >
-                  - 1
-                </Button>
-              ) : (
-                <Button type={'button'} disabled variant={'outline'}>
-                  - 1
-                </Button>
-              )}
-              <div className='grid w-full grid-cols-2 gap-2'>
-                <Button
-                  type='button'
-                  variant='destructive'
-                  onClick={clearForm}
-                  disabled={isPending || data?.success?.approver}
-                  className='w-full'
-                >
-                  Wyczyść
-                </Button>
-                <Button
-                  disabled={
-                    !selectedArticle || isPending || data?.success?.approver
-                  }
-                  type='submit'
-                  className='w-full'
-                >
-                  {isPending ? <Loader2 className='animate-spin' /> : <RefreshCcw />}
-                  Zapisz
-                </Button>
-              </div>
-              {position !== 25 && data?.success ? (
-                <Button
-                  onClick={() => {
-                    setPosition(position + 1);
-                    setShowPlusOneMessage(true);
-                  }}
-                  type={'button'}
-                  variant={'outline'}
-                >
-                  + 1
-                </Button>
-              ) : (
-                <Button type={'button'} disabled variant={'outline'}>
-                  + 1
-                </Button>
-              )}
-            </CardFooter>
           </form>
         </Form>
       )}
       {isFetching && (
         <>
-          <CardContent className='g-full grid w-full items-center gap-4'>
-            <Skeleton className='h-28'></Skeleton>
-            <Skeleton className='h-28'></Skeleton>
-            <Skeleton className='h-12'></Skeleton>
-            <Skeleton className='h-20'></Skeleton>
-            <Skeleton className='h-12'></Skeleton>
+          <CardContent className="g-full grid w-full items-center gap-4">
+            <Skeleton className="h-28"></Skeleton>
+            <Skeleton className="h-28"></Skeleton>
+            <Skeleton className="h-12"></Skeleton>
+            <Skeleton className="h-20"></Skeleton>
+            <Skeleton className="h-12"></Skeleton>
           </CardContent>
-
-          {/* <CardFooter className=' flex justify-between'>
-            {position !== 1 ? (
-              <Button
-                onClick={() => setPosition(position - 1)}
-                type={'button'}
-                variant={'outline'}
-              >
-                - 1
-              </Button>
-            ) : (
-              <Button type={'button'} disabled variant={'outline'}>
-                - 1
-              </Button>
-            )}
-            <Button disabled={!selectedArticle || isPending} type='submit'>
-              {isPending ? <Loader2 className='animate-spin' /> : <RefreshCcw />}
-              Zapisz
-            </Button>
-            {position !== 25 && data?.success ? (
-              <Button
-                onClick={() => setPosition(position + 1)}
-                type={'button'}
-                variant={'outline'}
-              >
-                + 1
-              </Button>
-            ) : (
-              <Button type={'button'} disabled variant={'outline'}>
-                + 1
-              </Button>
-            )}
-          </CardFooter> */}
         </>
       )}
+
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t pt-4 pb-4 sm:static sm:border-t-0 sm:pt-0 sm:pb-0">
+        <CardFooter className="max-w-[600px] mx-auto py-0 sm:max-w-none sm:py-6">
+          <div className="grid w-full grid-cols-8 gap-2">
+            <Button
+              onClick={() => {
+                setPosition(position - 1);
+                setShowPlusOneMessage(false);
+              }}
+              type={'button'}
+              disabled={position === 1 || isFetching}
+              variant={'outline'}
+              className="col-span-4"
+            >
+              <ChevronLeft />
+              Poprzednia
+            </Button>
+            <Button
+              onClick={() => {
+                setPosition(position + 1);
+                setShowPlusOneMessage(true);
+              }}
+              type={'button'}
+              disabled={position === 25 || !data?.success || isFetching}
+              variant={'outline'}
+              className="col-span-4"
+            >
+              Następna
+              <ChevronRight />
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={clearForm}
+              disabled={isFetching || isPending || data?.success?.approver}
+              className="col-span-1"
+            >
+              <Eraser />
+            </Button>
+            <Button
+              disabled={
+                isFetching || !selectedArticle || isPending || data?.success?.approver
+              }
+              onClick={form.handleSubmit(onSubmit)}
+              type="button"
+              className="col-span-7"
+            >
+              {isPending ? (
+                <Loader2 className="animate-spin" />
+              ) : (
+                <Save />
+              )}
+              Zapisz
+            </Button>
+          </div>
+        </CardFooter>
+      </div>
     </Card>
   );
 }

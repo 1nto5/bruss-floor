@@ -1,5 +1,6 @@
 import ProLayout from '@/app/[lang]/components/pro-layout';
 import '@/app/globals.css';
+import { Toaster } from '@/components/ui/sonner';
 import { Locale } from '@/lib/config/i18n';
 import { ThemeProvider } from '@/lib/providers/theme-provider';
 import { Metadata } from 'next';
@@ -35,6 +36,7 @@ export default async function OvenLayout(props: {
         <ProLayout header={<Header dict={dict} lang={locale} />}>
           {children}
         </ProLayout>
+        <Toaster position="bottom-center" richColors />
       </QueryProvider>
     </ThemeProvider>
   );

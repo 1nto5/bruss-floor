@@ -1,5 +1,6 @@
 import ProLayout from '@/app/[lang]/components/pro-layout';
 import '@/app/globals.css';
+import { Toaster } from '@/components/ui/sonner';
 import type { Locale } from '@/lib/config/i18n';
 import { ThemeProvider } from '@/lib/providers/theme-provider';
 import { Metadata } from 'next';
@@ -27,6 +28,7 @@ export default async function EOL136153Layout(props: {
         <ProLayout header={<Header lang={locale} dict={dict} />}>
           {children}
         </ProLayout>
+        <Toaster position="bottom-center" richColors />
       </Providers>
     </ThemeProvider>
   );

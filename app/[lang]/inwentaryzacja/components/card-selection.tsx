@@ -1,15 +1,11 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { newCardSchema as formSchema } from '../lib/zod';
-// import { login } from '../actions';
-import {
-  sectorsSelectOptions,
-  warehouseSelectOptions,
-} from '@/app/[lang]/inw/spis/lib/options';
+import { getWarehouseOptions, getSectorOptions } from '../actions';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -22,7 +18,6 @@ import {
 import {
   Form,
   FormControl,
-  // FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -40,16 +35,22 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import clsx from 'clsx';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { createNewCard } from '../actions';
 import { useGetCards } from '../data/get-cards';
 import { useCardStore, usePersonalNumberStore } from '../lib/stores';
 import { CardType } from '../lib/types';
 import ErrorAlert from './error-alert';
+import TableSkeleton from './table-skeleton';
 
 export default function CardSelection() {
   const [isPending, setIsPending] = useState(false);
+  const [warehouseOptions, setWarehouseOptions] = useState<any[]>([]);
+  const [sectorOptions, setSectorOptions] = useState<any[]>([]);
+  const [configsLoading, setConfigsLoading] = useState(true);
+  const [configError, setConfigError] = useState<string | null>(null);
+
   const { personalNumber1, personalNumber2, personalNumber3 } =
     usePersonalNumberStore();
   const { setCard } = useCardStore();
@@ -57,6 +58,37 @@ export default function CardSelection() {
     (person) => person,
   );
   const { data, error, refetch, isFetching } = useGetCards(persons);
+
+  useEffect(() => {
+    const fetchConfigs = async () => {
+      try {
+        setConfigsLoading(true);
+        const [warehouseRes, sectorRes] = await Promise.all([
+          getWarehouseOptions(),
+          getSectorOptions(),
+        ]);
+
+        if ('error' in warehouseRes) {
+          setConfigError(warehouseRes.error || 'Unknown error');
+          return;
+        }
+        if ('error' in sectorRes) {
+          setConfigError(sectorRes.error || 'Unknown error');
+          return;
+        }
+
+        setWarehouseOptions(warehouseRes.success || []);
+        setSectorOptions(sectorRes.success || []);
+        setConfigError(null);
+      } catch (err) {
+        setConfigError('Nie udało się załadować konfiguracji');
+      } finally {
+        setConfigsLoading(false);
+      }
+    };
+
+    fetchConfigs();
+  }, []);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -83,14 +115,12 @@ export default function CardSelection() {
             );
             break;
           default:
-            console.error('onSubmitNewCard', res.error);
             toast.error('Skontaktuj się z IT!');
         }
       } else if (res.success && res.cardNumber) {
         setCard(res.cardNumber, data.warehouse, data.sector);
       }
     } catch (error) {
-      console.error('onSubmit', error);
       toast.error('Skontaktuj się z IT!');
     } finally {
       setIsPending(false);
@@ -98,8 +128,20 @@ export default function CardSelection() {
   };
 
   if (data?.error || error) {
-    console.error(data?.error || error);
     return <ErrorAlert refetch={refetch} isFetching={isFetching} />;
+  }
+
+  if (configError) {
+    return (
+      <Card className='border-destructive'>
+        <CardHeader>
+          <CardTitle className='text-destructive'>Błąd konfiguracji</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p>{configError}</p>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
@@ -109,7 +151,7 @@ export default function CardSelection() {
         <TabsTrigger value='exists'>Wybierz istniejącą kartę</TabsTrigger>
       </TabsList>
       <TabsContent value='new'>
-        <Card>
+        <Card className='mb-8 sm:mb-0'>
           <CardHeader>
             <CardTitle>Nowa karta</CardTitle>
           </CardHeader>
@@ -129,19 +171,23 @@ export default function CardSelection() {
                           defaultValue={field.value}
                           className='flex flex-col space-y-1'
                         >
-                          {warehouseSelectOptions.map((warehouse) => (
-                            <FormItem
-                              key={warehouse.value}
-                              className='flex items-center space-y-0 space-x-3'
-                            >
-                              <FormControl>
-                                <RadioGroupItem value={warehouse.value} />
-                              </FormControl>
-                              <FormLabel className='font-normal'>
-                                {warehouse.label}
-                              </FormLabel>
-                            </FormItem>
-                          ))}
+                          {configsLoading ? (
+                            <Skeleton className='h-5 w-32' />
+                          ) : (
+                            warehouseOptions.map((warehouse) => (
+                              <FormItem
+                                key={warehouse.value}
+                                className='flex items-center space-y-0 space-x-3'
+                              >
+                                <FormControl>
+                                  <RadioGroupItem value={warehouse.value} />
+                                </FormControl>
+                                <FormLabel className='font-normal'>
+                                  {warehouse.label}
+                                </FormLabel>
+                              </FormItem>
+                            ))
+                          )}
                         </RadioGroup>
                       </FormControl>
                       <FormMessage />
@@ -160,19 +206,23 @@ export default function CardSelection() {
                           defaultValue={field.value}
                           className='flex flex-col space-y-1'
                         >
-                          {sectorsSelectOptions.map((sector) => (
-                            <FormItem
-                              key={sector.value}
-                              className='flex items-center space-y-0 space-x-3'
-                            >
-                              <FormControl>
-                                <RadioGroupItem value={sector.value} />
-                              </FormControl>
-                              <FormLabel className='font-normal'>
-                                {sector.label}
-                              </FormLabel>
-                            </FormItem>
-                          ))}
+                          {configsLoading ? (
+                            <Skeleton className='h-5 w-32' />
+                          ) : (
+                            sectorOptions.map((sector) => (
+                              <FormItem
+                                key={sector.value}
+                                className='flex items-center space-y-0 space-x-3'
+                              >
+                                <FormControl>
+                                  <RadioGroupItem value={sector.value} />
+                                </FormControl>
+                                <FormLabel className='font-normal'>
+                                  {sector.label}
+                                </FormLabel>
+                              </FormItem>
+                            ))
+                          )}
                         </RadioGroup>
                       </FormControl>
                       <FormMessage />
@@ -180,12 +230,14 @@ export default function CardSelection() {
                   )}
                 />
               </CardContent>
-              <CardFooter className='flex justify-end'>
-                <Button type='submit' disabled={isPending}>
-                  <Loader2 className={isPending ? 'animate-spin' : ''} />
-                  Utwórz kartę
-                </Button>
-              </CardFooter>
+              <div className='fixed bottom-0 left-0 right-0 z-50 bg-background border-t pt-4 pb-4 sm:static sm:border-t-0 sm:pt-0 sm:pb-0'>
+                <CardFooter className='flex max-w-[600px] mx-auto py-0 sm:max-w-none sm:py-6'>
+                  <Button type='submit' disabled={isPending} className='w-full'>
+                    {isPending ? <Loader2 className='animate-spin' /> : <Plus />}
+                    Utwórz kartę
+                  </Button>
+                </CardFooter>
+              </div>
             </form>
           </Form>
         </Card>
@@ -203,7 +255,6 @@ export default function CardSelection() {
             </CardHeader>
             <CardContent className='grid w-full items-center gap-4'>
               <Table>
-                {/* <TableCaption>A list of instruments.</TableCaption> */}
                 <TableHeader>
                   <TableRow>
                     <TableHead>Numer</TableHead>
@@ -253,29 +304,9 @@ export default function CardSelection() {
               </CardDescription>
             </CardHeader>
             <CardContent className='grid w-full items-center gap-4'>
-              <Skeleton>
-                <Table>
-                  {/* <TableCaption>A list of instruments.</TableCaption> */}
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Numer</TableHead>
-                      <TableHead>Liczba pozycji</TableHead>
-                      <TableHead>Magazyn</TableHead>
-                      <TableHead>Sektor</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {Array.from({ length: 5 }).map((_, index) => (
-                      <TableRow key={index}>
-                        <TableCell></TableCell>
-                        <TableCell></TableCell>
-                        <TableCell></TableCell>
-                        <TableCell></TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </Skeleton>
+              <TableSkeleton
+                headers={['Numer', 'Liczba pozycji', 'Magazyn', 'Sektor']}
+              />
             </CardContent>
           </Card>
         )}

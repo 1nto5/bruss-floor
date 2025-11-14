@@ -196,7 +196,7 @@ export default function PositionEdit() {
         }
         return;
       }
-      if ('partial' in res) {
+      if ('partial' in res && res.partial) {
         setFindArticleMessage(
           `Wyświetlono 5 z ${res.partial.totalCount} wyników - doprecyzuj wyszukiwanie`
         );

@@ -9,12 +9,14 @@ import {
   OvenProcessType,
   OvenProgramConfigType,
   OvenFaultReportType,
+  OvenFaultType,
 } from './lib/types';
 import {
   completeProcessSchema,
   loginType,
   startBatchSchemaServer,
   finishFaultSchema,
+  reportFaultSchema,
 } from './lib/zod';
 
 /**
@@ -602,19 +604,60 @@ export async function fetchOvenLastAvgTemp(
 }
 
 /**
+ * Fetches all available oven fault types sorted alphabetically by key
+ * @returns Array of fault types or error message
+ */
+export async function fetchOvenFaultTypes(): Promise<
+  { success: OvenFaultType[] } | { error: string }
+> {
+  try {
+    const collection = await dbc('oven_fault_configs');
+    const faultTypes = await collection.find({}).sort({ key: 1 }).toArray();
+
+    const sanitizedFaultTypes = faultTypes.map((doc) => ({
+      id: doc._id.toString(),
+      key: doc.key,
+      translations: doc.translations,
+    }));
+
+    return { success: sanitizedFaultTypes };
+  } catch (error) {
+    console.error('fetchOvenFaultTypes error:', error);
+    return { error: 'fault types fetch error' };
+  }
+}
+
+/**
  * Reports a fault for an oven
  * @param oven - The oven identifier
  * @param operators - Array of operator identifiers reporting the fault
+ * @param faultKey - The fault type key
  * @returns Success status with faultId or error message
  */
 export async function reportOvenFault(
   oven: string,
   operators: string[],
+  faultKey: string,
 ): Promise<{ error: string } | { success: boolean; faultId: string }> {
   try {
+    // Validate input data using ZOD schema
+    const validationResult = reportFaultSchema.safeParse({ faultKey });
+
+    if (!validationResult.success) {
+      return { error: 'validation failed' };
+    }
+
     // Validate operators array
     if (!operators || operators.length === 0) {
       return { error: 'no operator' };
+    }
+
+    // Verify fault type exists
+    const faultTypesCollection = await dbc('oven_fault_configs');
+    const faultType = await faultTypesCollection.findOne({ key: faultKey });
+
+    if (!faultType) {
+      return { error: 'invalid fault type' };
     }
 
     const collection = await dbc('oven_fault_reports');
@@ -622,6 +665,7 @@ export async function reportOvenFault(
     // Create new fault report
     const newFault = {
       oven,
+      faultKey,
       reportedBy: operators,
       startTime: new Date(),
       endTime: null,
@@ -702,10 +746,12 @@ export async function finishOvenFault(
 /**
  * Fetches the active fault report for a specific oven
  * @param oven - The oven identifier
+ * @param lang - The language for fault type translation
  * @returns Active fault report or null if none exists, or error message
  */
 export async function fetchActiveOvenFault(
   oven: string,
+  lang: 'pl' | 'de' | 'en' | 'tl' | 'uk' | 'be',
 ): Promise<{ success: OvenFaultReportType | null } | { error: string }> {
   try {
     const collection = await dbc('oven_fault_reports');
@@ -718,10 +764,18 @@ export async function fetchActiveOvenFault(
       return { success: null };
     }
 
+    // Fetch fault type translation
+    const faultTypesCollection = await dbc('oven_fault_configs');
+    const faultType = await faultTypesCollection.findOne({
+      key: fault.faultKey,
+    });
+
+    const faultTypeName = faultType?.translations?.[lang] || fault.faultKey;
+
     // Fetch operator names for reportedBy identifiers
     const employeesCollection = await dbc('employees');
     const reportedByNames: string[] = [];
-    
+
     for (const identifier of fault.reportedBy) {
       const employee = await employeesCollection.findOne({ identifier });
       if (employee && employee.firstName && employee.lastName) {
@@ -737,6 +791,8 @@ export async function fetchActiveOvenFault(
       success: {
         id: fault._id.toString(),
         oven: fault.oven,
+        faultKey: fault.faultKey,
+        faultTypeName,
         reportedBy: reportedByNames,
         startTime: fault.startTime,
         endTime: fault.endTime,

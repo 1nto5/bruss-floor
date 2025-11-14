@@ -91,7 +91,9 @@
       "faultReportError": "Error sa pag-uulat ng sira - makipag-ugnayan sa IT",
       "faultFinishError": "Error sa pagtatapos ng sira - makipag-ugnayan sa IT",
       "notFinished": "Hindi natapos ang sira",
-      "faultFetchError": "Error sa pagkuha ng sira - makipag-ugnayan sa IT"
+      "faultFetchError": "Error sa pagkuha ng sira - makipag-ugnayan sa IT",
+      "invalidFaultType": "Hindi wastong uri ng sira - makipag-ugnayan sa IT",
+      "faultTypesFetchError": "Error sa pagkuha ng mga uri ng sira - makipag-ugnayan sa IT"
     }
   },
   "startBatchDialog": {
@@ -124,7 +126,7 @@
   },
   "reportFaultDialog": {
     "title": "Iulat ang sira ng oven",
-    "description": "Sigurado ka bang nais mong iulat ang sira para sa oven na ito?",
+    "description": "Pumili ng sira na nais mong iulat para sa oven na ito.",
     "reportedBy": "Naiulat ng",
     "cancel": "Kanselahin",
     "confirm": "Iulat ang sira"

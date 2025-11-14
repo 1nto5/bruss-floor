@@ -105,3 +105,12 @@ export const finishFaultSchema = z.object({
 });
 
 export type FinishFaultType = z.infer<typeof finishFaultSchema>;
+
+// Schema for reporting a fault (server-side validation)
+export const reportFaultSchema = z.object({
+  faultKey: z.string().min(1, {
+    message: 'fault type required',
+  }),
+});
+
+export type ReportFaultType = z.infer<typeof reportFaultSchema>;

@@ -91,7 +91,9 @@
       "faultReportError": "Błąd zgłaszania awarii - skontaktuj się z IT",
       "faultFinishError": "Błąd kończenia awarii - skontaktuj się z IT",
       "notFinished": "Nie udało się zakończyć awarii",
-      "faultFetchError": "Błąd pobierania awarii - skontaktuj się z IT"
+      "faultFetchError": "Błąd pobierania awarii - skontaktuj się z IT",
+      "invalidFaultType": "Nieprawidłowy typ awarii - skontaktuj się z IT",
+      "faultTypesFetchError": "Błąd pobierania typów awarii - skontaktuj się z IT"
     }
   },
   "startBatchDialog": {
@@ -124,7 +126,7 @@
   },
   "reportFaultDialog": {
     "title": "Zgłoś awarię pieca",
-    "description": "Czy na pewno chcesz zgłosić awarię tego pieca?",
+    "description": "Wybierz awarię, którą chcesz zgłosić dla tego pieca.",
     "reportedBy": "Zgłoszone przez",
     "cancel": "Anuluj",
     "confirm": "Zgłoś awarię"

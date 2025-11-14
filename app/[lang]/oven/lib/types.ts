@@ -32,9 +32,24 @@ export type OvenProcessType = {
   isOverdue?: boolean; // True if currentTime > (startTime + targetDuration + durationTolerance)
 };
 
+export type OvenFaultType = {
+  id: string;
+  key: string;
+  translations: {
+    pl: string;
+    de: string;
+    en: string;
+    tl: string;
+    uk: string;
+    be: string;
+  };
+};
+
 export type OvenFaultReportType = {
   id: string;
   oven: string;
+  faultKey: string;
+  faultTypeName: string; // Translated name based on current language
   reportedBy: string[];
   startTime: Date;
   endTime: Date | null;

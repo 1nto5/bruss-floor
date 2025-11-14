@@ -48,6 +48,7 @@ import {
 import { useOvenLastAvgTemp } from '../data/get-oven-last-avg-temp';
 import { useGetOvenProcesses } from '../data/get-oven-processes';
 import { useActiveOvenFault } from '../data/get-active-oven-fault';
+import { useOvenFaultTypes } from '../data/get-oven-fault-types';
 import type { Dictionary } from '../lib/dict';
 import { useOperatorStore, useOvenStore, useVolumeStore } from '../lib/stores';
 import type { OvenProcessType, OvenFaultReportType } from '../lib/types';
@@ -74,12 +75,18 @@ export default function ProcessList({ dict, lang }: ProcessListProps) {
     !isNaN(tempData.avgTemp)
       ? tempData.avgTemp
       : null;
-  
-  const { data: faultData, refetch: refetchFault } = useActiveOvenFault(selectedOven);
-  const activeFault = 
-    faultData && 'success' in faultData && faultData.success 
-      ? faultData.success 
+
+  const { data: faultData, refetch: refetchFault } = useActiveOvenFault(selectedOven, lang);
+  const activeFault =
+    faultData && 'success' in faultData && faultData.success
+      ? faultData.success
       : null;
+
+  const { data: faultTypesData } = useOvenFaultTypes();
+  const faultTypes =
+    faultTypesData && 'success' in faultTypesData
+      ? faultTypesData.success
+      : [];
 
   const formatDateTimeLocal = (date: Date | string | null | undefined): string => {
     if (!date) return '-';
@@ -163,6 +170,8 @@ export default function ProcessList({ dict, lang }: ProcessListProps) {
         'fault finish error': 'faultFinishError',
         'not finished': 'notFinished',
         'fault fetch error': 'faultFetchError',
+        'invalid fault type': 'invalidFaultType',
+        'fault types fetch error': 'faultTypesFetchError',
       };
       const errorKey = errorMap[serverError];
       return errorKey
@@ -331,8 +340,8 @@ export default function ProcessList({ dict, lang }: ProcessListProps) {
     setReportFaultDialogOpen(true);
   }, []);
 
-  const handleConfirmReportFault = useCallback(async () => {
-    const result = await reportOvenFault(selectedOven, operators);
+  const handleConfirmReportFault = useCallback(async (faultKey: string) => {
+    const result = await reportOvenFault(selectedOven, operators, faultKey);
 
     if ('success' in result && result.success) {
       await refetchFault();
@@ -393,6 +402,27 @@ export default function ProcessList({ dict, lang }: ProcessListProps) {
         <Card>
           <CardHeader>
             <div className='flex gap-4'>
+              {activeFault ? (
+                <Button
+                  onClick={handleFinishFault}
+                  variant='destructive'
+                  className='flex-1'
+                  size='lg'
+                >
+                  <CheckCircle />
+                  {dict.processList.finishFault}
+                </Button>
+              ) : (
+                <Button
+                  onClick={handleReportFault}
+                  variant='destructive'
+                  className='flex-1'
+                  size='lg'
+                >
+                  <AlertTriangle />
+                  {dict.processList.reportFault}
+                </Button>
+              )}
               <Button
                 onClick={() => setStartDialogOpen(true)}
                 className='flex-1'
@@ -412,17 +442,6 @@ export default function ProcessList({ dict, lang }: ProcessListProps) {
                 <StopCircle />
                 {dict.processList.endProcess}
               </Button>
-              {activeFault ? (
-                <Button
-                  onClick={handleFinishFault}
-                  variant='destructive'
-                  className='flex-1'
-                  size='lg'
-                >
-                  <CheckCircle />
-                  {dict.processList.finishFault}
-                </Button>
-              ) : null}
             </div>
           </CardHeader>
           <CardContent className='pt-2'>
@@ -437,6 +456,7 @@ export default function ProcessList({ dict, lang }: ProcessListProps) {
                       {dict.processList.alerts.activeFault}
                     </AlertTitle>
                     <AlertDescription>
+                      <div><strong>{activeFault.faultTypeName}</strong></div>
                       <div>{dict.processList.alerts.faultReportedBy}: {activeFault.reportedBy.join(', ')}</div>
                       <div>{dict.processList.alerts.faultStartTime}: {formatDateTimeLocal(activeFault.startTime)}</div>
                     </AlertDescription>
@@ -578,6 +598,8 @@ export default function ProcessList({ dict, lang }: ProcessListProps) {
         onOpenChange={setReportFaultDialogOpen}
         onConfirm={handleConfirmReportFault}
         operatorNames={operatorNames}
+        faultTypes={faultTypes}
+        lang={lang}
         dict={dict}
       />
 

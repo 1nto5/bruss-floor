@@ -91,7 +91,9 @@
       "faultReportError": "Störungsmeldungsfehler - IT kontaktieren",
       "faultFinishError": "Störungsabschlussfehler - IT kontaktieren",
       "notFinished": "Störung konnte nicht beendet werden",
-      "faultFetchError": "Störungsabruffehler - IT kontaktieren"
+      "faultFetchError": "Störungsabruffehler - IT kontaktieren",
+      "invalidFaultType": "Ungültiger Störungstyp - IT kontaktieren",
+      "faultTypesFetchError": "Fehler beim Abrufen der Störungstypen - IT kontaktieren"
     }
   },
   "startBatchDialog": {
@@ -124,7 +126,7 @@
   },
   "reportFaultDialog": {
     "title": "Ofenstörung melden",
-    "description": "Möchten Sie wirklich eine Störung für diesen Ofen melden?",
+    "description": "Wählen Sie die Störung aus, die Sie für diesen Ofen melden möchten.",
     "reportedBy": "Gemeldet von",
     "cancel": "Abbrechen",
     "confirm": "Störung melden"

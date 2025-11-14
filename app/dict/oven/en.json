@@ -91,7 +91,9 @@
       "faultReportError": "Fault report error - contact IT",
       "faultFinishError": "Fault finish error - contact IT",
       "notFinished": "Failed to finish fault",
-      "faultFetchError": "Fault fetch error - contact IT"
+      "faultFetchError": "Fault fetch error - contact IT",
+      "invalidFaultType": "Invalid fault type - contact IT",
+      "faultTypesFetchError": "Fault types fetch error - contact IT"
     }
   },
   "startBatchDialog": {
@@ -124,7 +126,7 @@
   },
   "reportFaultDialog": {
     "title": "Report oven fault",
-    "description": "Are you sure you want to report a fault for this oven?",
+    "description": "Select the fault you want to report for this oven.",
     "reportedBy": "Reported by",
     "cancel": "Cancel",
     "confirm": "Report fault"

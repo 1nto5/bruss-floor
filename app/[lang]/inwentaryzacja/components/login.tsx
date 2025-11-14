@@ -31,8 +31,11 @@ import { Loader2, LogIn } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function Login() {
-  const { setPersonalNumber1, setPersonalNumber2, setPersonalNumber3 } =
-    usePersonalNumberStore();
+  const {
+    setPersonalNumber1,
+    setPersonalNumber2,
+    setPersonalNumber3,
+  } = usePersonalNumberStore();
   const [personalNumber2Form, setPersonalNumber2Form] = useState(false);
   const [personalNumber3Form, setPersonalNumber3Form] = useState(false);
   const [isPending, setIsPending] = useState(false);
@@ -111,9 +114,9 @@ export default function Login() {
             toast.error('Skontaktuj się z IT!');
         }
       } else if (res.success) {
-        setPersonalNumber1(data.personalNumber1);
-        setPersonalNumber2(data.personalNumber2 || '');
-        setPersonalNumber3(data.personalNumber3 || '');
+        setPersonalNumber1(data.personalNumber1, res.name1 || '');
+        setPersonalNumber2(data.personalNumber2 || '', res.name2 || '');
+        setPersonalNumber3(data.personalNumber3 || '', res.name3 || '');
       }
     } catch (error) {
       toast.error('Skontaktuj się z IT!');

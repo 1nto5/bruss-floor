@@ -5,23 +5,44 @@ type PersonalNumbersStateType = {
   personalNumber1: string;
   personalNumber2: string;
   personalNumber3: string;
-  setPersonalNumber1: (personalNumber1: string) => void;
-  setPersonalNumber2: (personalNumber2: string) => void;
-  setPersonalNumber3: (personalNumber3: string) => void;
+  name1: string;
+  name2: string;
+  name3: string;
+  setPersonalNumber1: (personalNumber1: string, name: string) => void;
+  setPersonalNumber2: (personalNumber2: string, name: string) => void;
+  setPersonalNumber3: (personalNumber3: string, name: string) => void;
+  getName: (identifier: string) => string;
   logout: () => void;
 };
 
 export const usePersonalNumberStore = create<PersonalNumbersStateType>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       personalNumber1: '',
       personalNumber2: '',
       personalNumber3: '',
-      setPersonalNumber1: (personalNumber1) => set({ personalNumber1 }),
-      setPersonalNumber2: (personalNumber2) => set({ personalNumber2 }),
-      setPersonalNumber3: (personalNumber3) => set({ personalNumber3 }),
+      name1: '',
+      name2: '',
+      name3: '',
+      setPersonalNumber1: (personalNumber1, name) => set({ personalNumber1, name1: name }),
+      setPersonalNumber2: (personalNumber2, name) => set({ personalNumber2, name2: name }),
+      setPersonalNumber3: (personalNumber3, name) => set({ personalNumber3, name3: name }),
+      getName: (identifier: string) => {
+        const { personalNumber1, personalNumber2, personalNumber3, name1, name2, name3 } = get();
+        if (identifier === personalNumber1) return name1;
+        if (identifier === personalNumber2) return name2;
+        if (identifier === personalNumber3) return name3;
+        return identifier;
+      },
       logout: () =>
-        set({ personalNumber1: '', personalNumber2: '', personalNumber3: '' }),
+        set({
+          personalNumber1: '',
+          personalNumber2: '',
+          personalNumber3: '',
+          name1: '',
+          name2: '',
+          name3: '',
+        }),
     }),
     { name: 'personal-numbers' },
   ),

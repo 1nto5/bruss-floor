@@ -34,6 +34,9 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import clsx from 'clsx';
 import { Loader2, Plus } from 'lucide-react';
 import { toast } from 'sonner';
@@ -51,8 +54,11 @@ export default function CardSelection() {
   const [configsLoading, setConfigsLoading] = useState(true);
   const [configError, setConfigError] = useState<string | null>(null);
 
-  const { personalNumber1, personalNumber2, personalNumber3 } =
-    usePersonalNumberStore();
+  const {
+    personalNumber1,
+    personalNumber2,
+    personalNumber3,
+  } = usePersonalNumberStore();
   const { setCard } = useCardStore();
   const persons = [personalNumber1, personalNumber2, personalNumber3].filter(
     (person) => person,
@@ -144,21 +150,29 @@ export default function CardSelection() {
     );
   }
 
+  // Process cards data
+  const processedCards = data?.success
+    ? (data.success as CardType[]).map((card) => ({
+        ...card,
+        positionsLength: card.positions?.length || 0,
+      }))
+    : [];
+
   return (
-    <Tabs defaultValue='new' className='sm:w-[600px]'>
+    <Tabs defaultValue='new' className='w-full sm:w-[600px]'>
       <TabsList className='grid w-full grid-cols-2'>
         <TabsTrigger value='new'>Utwórz nową kartę</TabsTrigger>
         <TabsTrigger value='exists'>Wybierz istniejącą kartę</TabsTrigger>
       </TabsList>
       <TabsContent value='new'>
-        <Card className='mb-8 sm:mb-0'>
+        <Card className=''>
           <CardHeader>
             <CardTitle>Nowa karta</CardTitle>
           </CardHeader>
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmitNewCard)}>
-              <CardContent className='grid w-full items-center gap-4'>
+              <CardContent className='grid w-full items-center gap-4 pb-20 sm:pb-0'>
                 <FormField
                   control={form.control}
                   name='warehouse'
@@ -230,7 +244,7 @@ export default function CardSelection() {
                   )}
                 />
               </CardContent>
-              <div className='fixed bottom-0 left-0 right-0 z-50 bg-background border-t pt-4 pb-4 sm:static sm:border-t-0 sm:pt-0 sm:pb-0'>
+              <div className='fixed bottom-1 left-0 right-0 z-50 bg-background border-t pt-4 pb-4 sm:static sm:border-t-0 sm:pt-0 sm:pb-0'>
                 <CardFooter className='flex max-w-[600px] mx-auto py-0 sm:max-w-none sm:py-6'>
                   <Button type='submit' disabled={isPending} className='w-full'>
                     {isPending ? <Loader2 className='animate-spin' /> : <Plus />}
@@ -258,27 +272,35 @@ export default function CardSelection() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Numer</TableHead>
-                    <TableHead>Liczba pozycji</TableHead>
+                    <TableHead>Pozycje</TableHead>
                     <TableHead>Magazyn</TableHead>
                     <TableHead>Sektor</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {(data.success as CardType[]).map((card: CardType) => (
-                    <TableRow
-                      key={card.number}
-                      onClick={() => {
-                        setCard(card.number, card.warehouse, card.sector);
-                      }}
-                    >
-                      <TableCell>{card.number}</TableCell>
-                      <TableCell>
-                        {card.positions ? card.positions.length : '0'}
+                  {processedCards.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={4} className='text-center py-4'>
+                        Brak kart spełniających kryteria
                       </TableCell>
-                      <TableCell>{card.warehouse}</TableCell>
-                      <TableCell>{card.sector}</TableCell>
                     </TableRow>
-                  ))}
+                  ) : (
+                    processedCards.map((card) => (
+                      <TableRow
+                        key={card.number}
+                        onClick={() => {
+                          setCard(card.number, card.warehouse, card.sector);
+                        }}
+                      >
+                        <TableCell>{card.number}</TableCell>
+                        <TableCell>
+                          <span>{card.positionsLength}</span>
+                        </TableCell>
+                        <TableCell>{card.warehouse}</TableCell>
+                        <TableCell>{card.sector}</TableCell>
+                      </TableRow>
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </CardContent>

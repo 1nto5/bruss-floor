@@ -1,3 +1,11 @@
+export type EmployeeType = {
+  identifier: string;
+  firstName: string;
+  lastName: string;
+  pin: string;
+  roles: string[];
+};
+
 export type PositionType = {
   position: number;
   identifier: string;
@@ -7,16 +15,12 @@ export type PositionType = {
   quantity: number;
   unit: string;
   wip: boolean;
-  approver: string;
-  approvedAt: string;
-  comment: string;
   bin: string;
   deliveryDate: Date;
 };
 
 export type CardPositionsTableDataType = PositionType & {
   timeLocaleString: string;
-  approvedAtLocaleString: string;
   deliveryDateLocaleString: string;
 };
 
@@ -31,5 +35,4 @@ export type CardType = {
 
 export type CardTableDataType = CardType & {
   positionsLength: number;
-  approvedPositions: number;
 };

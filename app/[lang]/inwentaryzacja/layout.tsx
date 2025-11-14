@@ -30,7 +30,7 @@ export default async function InwSpisLayout(props: {
       <QueryProvider>
         <div className="flex min-h-screen flex-col space-y-1">
           <Header />
-          <main className="mx-auto max-w-7xl flex-1 pb-24 sm:pb-8">
+          <main className="w-full sm:mx-auto sm:max-w-7xl flex-1 pb-24 sm:pb-8">
             <div className="flex justify-center">{children}</div>
           </main>
         </div>

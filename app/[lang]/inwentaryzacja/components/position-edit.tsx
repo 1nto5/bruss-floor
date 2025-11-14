@@ -32,12 +32,22 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ChevronLeft, ChevronRight, Eraser, Loader2, Save } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Eraser,
+  Loader2,
+  Save,
+} from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import * as z from 'zod';
-import { findArticles, findBins, savePosition } from '../actions';
+import {
+  findArticles,
+  findBins,
+  savePosition,
+} from '../actions';
 import { useGetPosition } from '../data/get-position';
 import {
   useCardStore,
@@ -75,6 +85,9 @@ export default function PositionEdit() {
   const [selectedBin, setSelectedBin] = useState<any>();
   const [identifier, setIdentifier] = useState('');
   const [showPlusOneMessage, setShowPlusOneMessage] = useState(false);
+
+  const articleDebounceTimeout = useRef<NodeJS.Timeout | null>(null);
+  const binDebounceTimeout = useRef<NodeJS.Timeout | null>(null);
   useEffect(() => {
     if (isSuccess && !data?.success?.identifier) {
       setIdentifier('');
@@ -134,22 +147,43 @@ export default function PositionEdit() {
   }, [isSuccess, data]);
 
   useEffect(() => {
+    // Clear any pending debounced searches
+    if (articleDebounceTimeout.current) {
+      clearTimeout(articleDebounceTimeout.current);
+      articleDebounceTimeout.current = null;
+    }
+    if (binDebounceTimeout.current) {
+      clearTimeout(binDebounceTimeout.current);
+      binDebounceTimeout.current = null;
+    }
+
     setIdentifier('');
     form.setValue('findArticle', '');
     form.setValue('quantity', '');
     form.setValue('wip', false);
     form.setValue('findBin', '');
+    setFindArticleMessage('');
+    setFoundArticles([]);
+    setSelectedArticle(undefined);
+    setFindBinMessage('');
+    setFoundBins([]);
+    setSelectedBin(undefined);
+    setIsPendingFindArticle(false);
+    setIsPendingFindBin(false);
     refetch();
   }, [position, refetch, card]);
 
-  const handleFindArticle = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    setIsPendingFindArticle(true);
-    setSelectedArticle(undefined);
-    form.setValue('article', '');
-    form.setValue('quantity', '');
-    form.setValue('unit', undefined);
+  const performArticleSearch = useCallback(async (searchValue: string) => {
+    if (!searchValue.trim()) {
+      setIsPendingFindArticle(false);
+      setFindArticleMessage('');
+      setFoundArticles([]);
+      setSelectedArticle(undefined);
+      return;
+    }
+
     try {
-      const res = await findArticles(e.target.value);
+      const res = await findArticles(searchValue);
       if ('error' in res) {
         switch (res.error) {
           case 'no articles':
@@ -157,16 +191,16 @@ export default function PositionEdit() {
             setFoundArticles([]);
             setSelectedArticle(undefined);
             break;
-          case 'too many articles':
-            setFindArticleMessage(
-              'Sprecyzuj wyszukiwanie - znaleziono za dużo artykułów!'
-            );
-            setFoundArticles([]);
-            setSelectedArticle(undefined);
-            break;
           default:
             toast.error('Skontaktuj się z IT!');
         }
+        return;
+      }
+      if ('partial' in res) {
+        setFindArticleMessage(
+          `Wyświetlono 5 z ${res.partial.totalCount} wyników - doprecyzuj wyszukiwanie`
+        );
+        setFoundArticles(res.partial.results);
         return;
       }
       setFindArticleMessage('success');
@@ -176,12 +210,46 @@ export default function PositionEdit() {
     } finally {
       setIsPendingFindArticle(false);
     }
+  }, []);
+
+  const handleFindArticle = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+
+    // Clear previous timeout
+    if (articleDebounceTimeout.current) {
+      clearTimeout(articleDebounceTimeout.current);
+    }
+
+    // Clear dependent form fields immediately
+    setSelectedArticle(undefined);
+    form.setValue('article', '');
+    form.setValue('quantity', '');
+    form.setValue('unit', undefined);
+
+    // Set loading state and debounce the API call
+    if (value.trim()) {
+      setIsPendingFindArticle(true);
+      articleDebounceTimeout.current = setTimeout(() => {
+        performArticleSearch(value);
+      }, 300);
+    } else {
+      setIsPendingFindArticle(false);
+      setFindArticleMessage('');
+      setFoundArticles([]);
+    }
   };
 
-  const handleFindBin = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    setIsPendingFindBin(true);
+  const performBinSearch = useCallback(async (searchValue: string) => {
+    if (!searchValue.trim()) {
+      setIsPendingFindBin(false);
+      setFindBinMessage('');
+      setFoundBins([]);
+      setSelectedBin(undefined);
+      return;
+    }
+
     try {
-      const res = await findBins(e.target.value);
+      const res = await findBins(searchValue);
       if ('error' in res) {
         switch (res.error) {
           case 'no bins':
@@ -205,6 +273,28 @@ export default function PositionEdit() {
       toast.error('Skontaktuj się z IT!');
     } finally {
       setIsPendingFindBin(false);
+    }
+  }, []);
+
+  const handleFindBin = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+
+    // Clear previous timeout
+    if (binDebounceTimeout.current) {
+      clearTimeout(binDebounceTimeout.current);
+    }
+
+    // Set loading state and debounce the API call
+    if (value.trim()) {
+      setIsPendingFindBin(true);
+      binDebounceTimeout.current = setTimeout(() => {
+        performBinSearch(value);
+      }, 300);
+    } else {
+      setIsPendingFindBin(false);
+      setFindBinMessage('');
+      setFoundBins([]);
+      setSelectedBin(undefined);
     }
   };
 
@@ -273,418 +363,417 @@ export default function PositionEdit() {
   }
 
   return (
-    <Card className="sm:w-[600px] mb-8 sm:mb-0">
-      <CardHeader>
-        <CardTitle>Pozycja nr: {position}</CardTitle>
-        <CardDescription>
-          karta nr: {card}, magazyn: {warehouse}, sektor: {sector}, zalogowani:{' '}
-          {persons.join(', ')}
-          {data?.success?.approver &&
-            ', pozycja zatwierdzona - edycja niedozwolona'}
-        </CardDescription>
-      </CardHeader>
-      {!isFetching && (
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
-            <CardContent className="grid w-full items-center gap-4">
-              {identifier && (
-                <FormItem className="rounded-lg border p-4">
-                  <FormLabel>Identyfikator</FormLabel>
-                  <FormMessage className="text-2xl">{identifier}</FormMessage>
-                </FormItem>
-              )}
-              <FormField
-                control={form.control}
-                name="findArticle"
-                render={({ field }) => (
+    <>
+      <Card className="w-full sm:w-[600px] max-w-full overflow-x-hidden">
+        <CardHeader>
+          <CardTitle>Pozycja nr: {position}</CardTitle>
+          <CardDescription>
+            karta nr: {card}, magazyn: {warehouse}, sektor: {sector},
+            zalogowani: {persons.join(', ')}
+          </CardDescription>
+        </CardHeader>
+        {!isFetching && (
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)}>
+              <CardContent className="grid w-full items-center gap-4 pb-20 sm:pb-0">
+                {identifier && (
                   <FormItem className="rounded-lg border p-4">
-                    <FormLabel>Artykuł</FormLabel>
-                    <div className="flex items-center space-x-2">
-                      <FormControl>
-                        <Input
-                          {...field}
-                          value={field.value ?? ''}
-                          disabled={data?.success?.approver}
-                          onChange={(e) => {
-                            field.onChange(e);
-                            handleFindArticle(e);
-                            setShowPlusOneMessage(false);
-                          }}
-                          placeholder={'wpisz numer lub nazwę aby wyszukać...'}
-                        />
-                      </FormControl>
-                    </div>
-                    {isPendingFindArticle && (
-                      <FormMessage>Wyszukiwanie...</FormMessage>
-                    )}
-                    {findArticleMessage !== 'success' &&
-                      !isPendingFindArticle && (
-                        <FormMessage>{findArticleMessage}</FormMessage>
-                      )}
-                    <FormMessage />
+                    <FormLabel>Identyfikator</FormLabel>
+                    <FormMessage className="text-2xl">{identifier}</FormMessage>
                   </FormItem>
                 )}
-              />
-              {foundArticles[0] && !isPendingFindArticle && (
                 <FormField
                   control={form.control}
-                  name="article"
-                  render={({ field }) => (
-                    <FormItem className="space-y-3 rounded-lg border p-4">
-                      <FormControl>
-                        <RadioGroup
-                          disabled={data?.success?.approver}
-                          onValueChange={(value) => {
-                            field.onChange(value);
-                            const selectedArticle = foundArticles.find(
-                              (article) => article.number === value
-                            );
-                            setSelectedArticle(selectedArticle);
-                          }}
-                          value={field.value}
-                          className="flex flex-col space-y-1"
-                        >
-                          {foundArticles.map((article) => (
-                            <FormItem
-                              key={article.number}
-                              className="flex items-center space-y-0 space-x-3"
-                            >
-                              <FormControl>
-                                <RadioGroupItem value={article.number} />
-                              </FormControl>
-                              <FormLabel className="font-normal">
-                                {article.number} - {article.name}
-                              </FormLabel>
-                            </FormItem>
-                          ))}
-                        </RadioGroup>
-                      </FormControl>
-                      {showPlusOneMessage && (
-                        <FormMessage className="">
-                          Artykuł zapisany z poprzedniej pozycji - zweryfikuj
-                          jego poprawność!
-                        </FormMessage>
-                      )}
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
-
-              {selectedArticle?.converter && (
-                <FormField
-                  control={form.control}
-                  name="unit"
+                  name="findArticle"
                   render={({ field }) => (
                     <FormItem className="rounded-lg border p-4">
-                      <FormLabel>Wybierz jednostkę</FormLabel>
-
-                      <RadioGroup
-                        value={field.value}
-                        onValueChange={(value) => {
-                          field.onChange(value);
-
-                          const currentQuantity = form.getValues('quantity');
-                          if (currentQuantity) {
-                            const numericQuantity = Number(currentQuantity);
-                            if (value === 'kg') {
-                              form.setValue(
-                                'quantity',
-                                (
-                                  numericQuantity * selectedArticle.converter
-                                ).toString()
-                              );
-                            } else if (value === 'st') {
-                              form.setValue(
-                                'quantity',
-                                (
-                                  numericQuantity / selectedArticle.converter
-                                ).toString()
-                              );
-                            }
-                          }
-                        }}
-                      >
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="kg" id="r2" />
-                          <Label htmlFor="kg">kg</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="st" id="r3" />
-                          <Label htmlFor="st">st</Label>
-                        </div>
-                      </RadioGroup>
-                    </FormItem>
-                  )}
-                />
-              )}
-
-              {selectedArticle && (
-                <FormField
-                  control={form.control}
-                  name="quantity"
-                  render={({ field }) => (
-                    <FormItem className="rounded-lg border p-4">
-                      <FormLabel>
-                        Ilość wyrażona w{' '}
-                        {selectedArticle.converter
-                          ? unit
-                          : selectedArticle.unit}
-                      </FormLabel>
-                      {selectedArticle.converter &&
-                        form.getValues('unit') === 'kg' && (
-                          <FormDescription>
-                            {`10 st = ${selectedArticle.converter} kg`}
-                          </FormDescription>
-                        )}
+                      <FormLabel>Artykuł</FormLabel>
                       <div className="flex items-center space-x-2">
                         <FormControl>
                           <Input
-                            className=""
-                            disabled={data?.success?.approver}
-                            placeholder={`podaj ilość w ${form.getValues('unit') || selectedArticle.unit}`}
-                            inputMode="decimal"
                             {...field}
+                            value={field.value ?? ''}
                             onChange={(e) => {
-                              // Handle comma to period conversion locally for display
-                              const value = e.target.value.replace(/,/g, '.');
-                              field.onChange(value);
+                              field.onChange(e);
+                              handleFindArticle(e);
+                              setShowPlusOneMessage(false);
                             }}
+                            placeholder={
+                              'wpisz numer lub nazwę aby wyszukać...'
+                            }
                           />
                         </FormControl>
                       </div>
                       {isPendingFindArticle && (
-                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <FormMessage>Wyszukiwanie...</FormMessage>
                       )}
-                      {selectedArticle.converter &&
-                        form.getValues('unit') === 'kg' &&
-                        form.getValues('quantity') && (
-                          <FormDescription>
-                            ={' '}
-                            {Math.floor(
-                              Number(
-                                form.getValues('quantity').replace(/,/g, '.')
-                              ) / selectedArticle.converter || 0
-                            )}{' '}
-                            st
-                          </FormDescription>
+                      {findArticleMessage !== 'success' &&
+                        !isPendingFindArticle && (
+                          <FormMessage>{findArticleMessage}</FormMessage>
                         )}
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-              )}
-
-              {selectedArticle && sector != 'S900' && (
-                <FormField
-                  control={form.control}
-                  name="wip"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-base">WIP</FormLabel>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          disabled={data?.success?.approver}
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              )}
-
-              {selectedArticle && (
-                <Accordion type="single" collapsible>
-                  <AccordionItem value="storage-delivery">
-                    <AccordionTrigger>
-                      Storage Bin i Data Dostawy
-                    </AccordionTrigger>
-
-                    <AccordionContent>
-                      <div className="space-y-4 pt-2">
-                        <FormField
-                          control={form.control}
-                          name="findBin"
-                          render={({ field }) => (
-                            <FormItem className="rounded-lg border p-4">
-                              <FormLabel>Storage Bin</FormLabel>
-
-                              <div className="flex items-center space-x-2">
+                {foundArticles[0] && !isPendingFindArticle && (
+                  <FormField
+                    control={form.control}
+                    name="article"
+                    render={({ field }) => (
+                      <FormItem className="space-y-3 rounded-lg border p-4">
+                        <FormControl>
+                          <RadioGroup
+                            onValueChange={(value) => {
+                              field.onChange(value);
+                              const selectedArticle = foundArticles.find(
+                                (article) => article.number === value
+                              );
+                              setSelectedArticle(selectedArticle);
+                            }}
+                            value={field.value}
+                            className="flex flex-col space-y-1"
+                          >
+                            {foundArticles.map((article) => (
+                              <FormItem
+                                key={article.number}
+                                className="flex items-center space-y-0 space-x-3"
+                              >
                                 <FormControl>
-                                  <Input
-                                    className=""
-                                    placeholder={'wpisz aby wyszukać...'}
-                                    value={field.value || ''}
-                                    onChange={(e) => {
-                                      field.onChange(e);
-                                      handleFindBin(e);
-                                    }}
-                                  />
+                                  <RadioGroupItem value={article.number} />
                                 </FormControl>
-                              </div>
-                              {isPendingFindBin && (
-                                <FormMessage>Wyszukiwanie...</FormMessage>
-                              )}
-                              {findBinMessage !== 'success' &&
-                                !isPendingFindBin && (
-                                  <FormMessage>{findBinMessage}</FormMessage>
-                                )}
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                                <FormLabel className="font-normal flex-1 truncate cursor-pointer">
+                                  {article.number} - {article.name}
+                                </FormLabel>
+                              </FormItem>
+                            ))}
+                          </RadioGroup>
+                        </FormControl>
+                        {showPlusOneMessage && (
+                          <FormMessage className="">
+                            Artykuł zapisany z poprzedniej pozycji - zweryfikuj
+                            jego poprawność!
+                          </FormMessage>
+                        )}
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
 
-                        {foundBins[0] && !isPendingFindBin && (
+                {selectedArticle?.converter && (
+                  <FormField
+                    control={form.control}
+                    name="unit"
+                    render={({ field }) => (
+                      <FormItem className="rounded-lg border p-4">
+                        <FormLabel>Wybierz jednostkę</FormLabel>
+
+                        <RadioGroup
+                          value={field.value}
+                          onValueChange={(value) => {
+                            field.onChange(value);
+
+                            const currentQuantity = form.getValues('quantity');
+                            if (currentQuantity) {
+                              const numericQuantity = Number(currentQuantity);
+                              if (value === 'kg') {
+                                form.setValue(
+                                  'quantity',
+                                  (
+                                    numericQuantity * selectedArticle.converter
+                                  ).toString()
+                                );
+                              } else if (value === 'st') {
+                                form.setValue(
+                                  'quantity',
+                                  (
+                                    numericQuantity / selectedArticle.converter
+                                  ).toString()
+                                );
+                              }
+                            }
+                          }}
+                        >
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="kg" id="r2" />
+                            <Label htmlFor="kg">kg</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="st" id="r3" />
+                            <Label htmlFor="st">st</Label>
+                          </div>
+                        </RadioGroup>
+                      </FormItem>
+                    )}
+                  />
+                )}
+
+                {selectedArticle && (
+                  <FormField
+                    control={form.control}
+                    name="quantity"
+                    render={({ field }) => (
+                      <FormItem className="rounded-lg border p-4">
+                        <FormLabel>
+                          Ilość wyrażona w{' '}
+                          {selectedArticle.converter
+                            ? unit
+                            : selectedArticle.unit}
+                        </FormLabel>
+                        {selectedArticle.converter &&
+                          form.getValues('unit') === 'kg' && (
+                            <FormDescription>
+                              {`10 st = ${selectedArticle.converter} kg`}
+                            </FormDescription>
+                          )}
+                        <div className="flex items-center space-x-2">
+                          <FormControl>
+                            <Input
+                              className=""
+                                placeholder={`podaj ilość w ${form.getValues('unit') || selectedArticle.unit}`}
+                              inputMode="decimal"
+                              {...field}
+                              onChange={(e) => {
+                                // Handle comma to period conversion locally for display
+                                const value = e.target.value.replace(/,/g, '.');
+                                field.onChange(value);
+                              }}
+                            />
+                          </FormControl>
+                        </div>
+                        {isPendingFindArticle && (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        )}
+                        {selectedArticle.converter &&
+                          form.getValues('unit') === 'kg' &&
+                          form.getValues('quantity') && (
+                            <FormDescription>
+                              ={' '}
+                              {Math.floor(
+                                Number(
+                                  form.getValues('quantity').replace(/,/g, '.')
+                                ) / selectedArticle.converter || 0
+                              )}{' '}
+                              st
+                            </FormDescription>
+                          )}
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+
+                {selectedArticle && sector != 'S900' && (
+                  <FormField
+                    control={form.control}
+                    name="wip"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                        <div className="space-y-0.5">
+                          <FormLabel className="text-base">WIP</FormLabel>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                )}
+
+                {selectedArticle && (
+                  <Accordion type="single" collapsible>
+                    <AccordionItem value="storage-delivery">
+                      <AccordionTrigger>
+                        Storage Bin i Data Dostawy
+                      </AccordionTrigger>
+
+                      <AccordionContent>
+                        <div className="space-y-4 pt-2">
                           <FormField
                             control={form.control}
-                            name="bin"
+                            name="findBin"
                             render={({ field }) => (
-                              <FormItem className="space-y-3 rounded-lg border p-4">
+                              <FormItem className="rounded-lg border p-4">
+                                <FormLabel>Storage Bin</FormLabel>
+
+                                <div className="flex items-center space-x-2">
+                                  <FormControl>
+                                    <Input
+                                      className=""
+                                      placeholder={'wpisz aby wyszukać...'}
+                                      value={field.value || ''}
+                                      onChange={(e) => {
+                                        field.onChange(e);
+                                        handleFindBin(e);
+                                      }}
+                                    />
+                                  </FormControl>
+                                </div>
+                                {isPendingFindBin && (
+                                  <FormMessage>Wyszukiwanie...</FormMessage>
+                                )}
+                                {findBinMessage !== 'success' &&
+                                  !isPendingFindBin && (
+                                    <FormMessage>{findBinMessage}</FormMessage>
+                                  )}
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          {foundBins[0] && !isPendingFindBin && (
+                            <FormField
+                              control={form.control}
+                              name="bin"
+                              render={({ field }) => (
+                                <FormItem className="space-y-3 rounded-lg border p-4">
+                                  <FormControl>
+                                    <RadioGroup
+                                                onValueChange={(value) => {
+                                        field.onChange(value);
+                                        const selectedBin = foundBins.find(
+                                          (bin) => bin.value === value
+                                        );
+                                        setFindBinMessage('success');
+                                        setSelectedBin(selectedBin);
+                                      }}
+                                      value={field.value}
+                                      className="flex flex-col space-y-1"
+                                    >
+                                      {foundBins.map((bin) => (
+                                        <FormItem
+                                          key={bin.value}
+                                          className="flex items-center space-y-0 space-x-3"
+                                        >
+                                          <FormControl>
+                                            <RadioGroupItem value={bin.value} />
+                                          </FormControl>
+                                          <FormLabel className="font-normal flex-1 truncate cursor-pointer">
+                                            {bin.label}
+                                          </FormLabel>
+                                        </FormItem>
+                                      ))}
+                                    </RadioGroup>
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          )}
+
+                          <FormField
+                            control={form.control}
+                            name="deliveryDate"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Data dostawy</FormLabel>
+
                                 <FormControl>
-                                  <RadioGroup
-                                    disabled={data?.success?.approver}
-                                    onValueChange={(value) => {
-                                      field.onChange(value);
-                                      const selectedBin = foundBins.find(
-                                        (bin) => bin.value === value
-                                      );
-                                      setFindBinMessage('success');
-                                      setSelectedBin(selectedBin);
-                                    }}
+                                  <DateTimePicker
+                                    modal
+                                    hideTime
                                     value={field.value}
-                                    className="flex flex-col space-y-1"
-                                  >
-                                    {foundBins.map((bin) => (
-                                      <FormItem
-                                        key={bin.value}
-                                        className="flex items-center space-y-0 space-x-3"
-                                      >
-                                        <FormControl>
-                                          <RadioGroupItem value={bin.value} />
-                                        </FormControl>
-                                        <FormLabel className="font-normal">
-                                          {bin.label}
-                                        </FormLabel>
-                                      </FormItem>
-                                    ))}
-                                  </RadioGroup>
+                                    onChange={field.onChange}
+                                    renderTrigger={({
+                                      open,
+                                      value,
+                                      setOpen,
+                                    }) => (
+                                      <DateTimeInput
+                                        value={value}
+                                        onChange={(x) =>
+                                          !open && field.onChange(x)
+                                        }
+                                        format="dd/MM/yyyy"
+                                        disabled={open}
+                                        onCalendarClick={() => setOpen(!open)}
+                                      />
+                                    )}
+                                  />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
                             )}
                           />
-                        )}
-
-                        <FormField
-                          control={form.control}
-                          name="deliveryDate"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Data dostawy</FormLabel>
-
-                              <FormControl>
-                                <DateTimePicker
-                                  modal
-                                  hideTime
-                                  value={field.value}
-                                  onChange={field.onChange}
-                                  renderTrigger={({ open, value, setOpen }) => (
-                                    <DateTimeInput
-                                      value={value}
-                                      onChange={(x) =>
-                                        !open && field.onChange(x)
-                                      }
-                                      format="dd/MM/yyyy"
-                                      disabled={open}
-                                      onCalendarClick={() => setOpen(!open)}
-                                    />
-                                  )}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
-              )}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
+                )}
+              </CardContent>
+            </form>
+          </Form>
+        )}
+        {isFetching && (
+          <>
+            <CardContent className="g-full grid w-full items-center gap-4">
+              <Skeleton className="h-28"></Skeleton>
+              <Skeleton className="h-28"></Skeleton>
+              <Skeleton className="h-12"></Skeleton>
+              <Skeleton className="h-20"></Skeleton>
+              <Skeleton className="h-12"></Skeleton>
             </CardContent>
-          </form>
-        </Form>
-      )}
-      {isFetching && (
-        <>
-          <CardContent className="g-full grid w-full items-center gap-4">
-            <Skeleton className="h-28"></Skeleton>
-            <Skeleton className="h-28"></Skeleton>
-            <Skeleton className="h-12"></Skeleton>
-            <Skeleton className="h-20"></Skeleton>
-            <Skeleton className="h-12"></Skeleton>
-          </CardContent>
-        </>
-      )}
+          </>
+        )}
 
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t pt-4 pb-4 sm:static sm:border-t-0 sm:pt-0 sm:pb-0">
-        <CardFooter className="max-w-[600px] mx-auto py-0 sm:max-w-none sm:py-6">
-          <div className="grid w-full grid-cols-8 gap-2">
-            <Button
-              onClick={() => {
-                setPosition(position - 1);
-                setShowPlusOneMessage(false);
-              }}
-              type={'button'}
-              disabled={position === 1 || isFetching}
-              variant={'outline'}
-              className="col-span-4"
-            >
-              <ChevronLeft />
-              Poprzednia
-            </Button>
-            <Button
-              onClick={() => {
-                setPosition(position + 1);
-                setShowPlusOneMessage(true);
-              }}
-              type={'button'}
-              disabled={position === 25 || !data?.success || isFetching}
-              variant={'outline'}
-              className="col-span-4"
-            >
-              Następna
-              <ChevronRight />
-            </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              onClick={clearForm}
-              disabled={isFetching || isPending || data?.success?.approver}
-              className="col-span-1"
-            >
-              <Eraser />
-            </Button>
-            <Button
-              disabled={
-                isFetching || !selectedArticle || isPending || data?.success?.approver
-              }
-              onClick={form.handleSubmit(onSubmit)}
-              type="button"
-              className="col-span-7"
-            >
-              {isPending ? (
-                <Loader2 className="animate-spin" />
-              ) : (
-                <Save />
-              )}
-              Zapisz
-            </Button>
-          </div>
-        </CardFooter>
-      </div>
-    </Card>
+        <div className="fixed bottom-1 left-0 right-0 z-50 bg-background border-t pt-4 pb-4 sm:static sm:border-t-0 sm:pt-0 sm:pb-0">
+          <CardFooter className="max-w-[600px] mx-auto py-0 sm:max-w-none sm:py-6">
+            <div className="grid w-full grid-cols-8 gap-2">
+              <Button
+                onClick={() => {
+                  setPosition(position - 1);
+                  setShowPlusOneMessage(false);
+                }}
+                type={'button'}
+                disabled={position === 1 || isFetching}
+                variant={'outline'}
+                className="col-span-4"
+              >
+                <ChevronLeft />
+                Poprzednia
+              </Button>
+              <Button
+                onClick={() => {
+                  setPosition(position + 1);
+                  setShowPlusOneMessage(true);
+                }}
+                type={'button'}
+                disabled={position === 25 || !data?.success || isFetching}
+                variant={'outline'}
+                className="col-span-4"
+              >
+                Następna
+                <ChevronRight />
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={clearForm}
+                disabled={isFetching || isPending}
+                className="col-span-1"
+              >
+                <Eraser />
+              </Button>
+              <Button
+                disabled={
+                  isFetching ||
+                  !selectedArticle ||
+                  isPending
+                }
+                onClick={form.handleSubmit(onSubmit)}
+                type="button"
+                className="col-span-7"
+              >
+                {isPending ? <Loader2 className="animate-spin" /> : <Save />}
+                Zapisz
+              </Button>
+            </div>
+          </CardFooter>
+        </div>
+      </Card>
+    </>
   );
 }

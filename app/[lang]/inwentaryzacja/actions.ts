@@ -25,8 +25,9 @@ export async function login(data: loginInventoryType) {
       return { error: 'wrong pin 1' };
     }
 
+    let person2 = null;
     if (data.personalNumber2) {
-      const person2 = await collection.findOne({
+      person2 = await collection.findOne({
         identifier: data.personalNumber2,
       });
       if (!person2) {
@@ -37,8 +38,9 @@ export async function login(data: loginInventoryType) {
       }
     }
 
+    let person3 = null;
     if (data.personalNumber3) {
-      const person3 = await collection.findOne({
+      person3 = await collection.findOne({
         identifier: data.personalNumber3,
       });
       if (!person3) {
@@ -50,6 +52,9 @@ export async function login(data: loginInventoryType) {
     }
     return {
       success: true,
+      name1: `${person1.firstName} ${person1.lastName}`,
+      name2: person2 ? `${person2.firstName} ${person2.lastName}` : '',
+      name3: person3 ? `${person3.firstName} ${person3.lastName}` : '',
     };
   } catch (error) {
     console.error(error);
@@ -117,6 +122,7 @@ export async function createNewCard(
 
 /**
  * Retrieves all inventory cards created by specific persons
+ * If persons have inventory-approve role, returns all cards
  * @param persons - Array of person identifiers to filter cards by
  * @returns Array of cards or error message
  */
@@ -126,6 +132,8 @@ export async function fetchCards(persons: string[]) {
     //   new Promise((resolve) => setTimeout(resolve, ms));
     // await timeout(2000);
     const coll = await dbc('inventory_cards');
+
+    // Show only cards created by these persons
     const cards = await coll
       .find({
         creators: {
@@ -133,6 +141,7 @@ export async function fetchCards(persons: string[]) {
         },
       })
       .toArray();
+
     if (cards.length === 0) {
       return { message: 'no cards' };
     }
@@ -165,12 +174,16 @@ export async function fetchCardPositions(
     if (!card) {
       return { error: 'no card' };
     }
-    if (
-      !card.creators ||
-      !card.creators.some((c: string) => persons.includes(c))
-    ) {
+
+    // Check authorization: must be creator
+    const isCreator =
+      card.creators &&
+      card.creators.some((c: string) => persons.includes(c));
+
+    if (!isCreator) {
       return { error: 'not authorized' };
     }
+
     if (!card.positions) {
       return { message: 'no positions' };
     }
@@ -208,12 +221,16 @@ export async function fetchPosition(
     if (position < 1 || position > 25) {
       return { error: 'wrong position' };
     }
-    if (
-      !existingCard.creators ||
-      !existingCard.creators.some((c: string) => persons.includes(c))
-    ) {
+
+    // Check authorization: must be creator
+    const isCreator =
+      existingCard.creators &&
+      existingCard.creators.some((c: string) => persons.includes(c));
+
+    if (!isCreator) {
       return { error: 'not authorized' };
     }
+
     if (!existingCard.positions) {
       return { message: 'no positions' };
     }
@@ -279,10 +296,17 @@ export async function findArticles(search: string) {
       return { error: 'no articles' };
     }
 
-    if (results.length > 5) {
-      return { error: 'too many articles' };
-    }
     const sanitizedResults = results.map(({ _id, ...rest }) => rest);
+
+    if (results.length > 5) {
+      return {
+        partial: {
+          results: sanitizedResults.slice(0, 5),
+          totalCount: results.length
+        }
+      };
+    }
+
     return { success: sanitizedResults };
   } catch (error) {
     console.error(error);
@@ -462,3 +486,4 @@ export async function savePosition(
     return { error: 'savePosition server action error' };
   }
 }
+
